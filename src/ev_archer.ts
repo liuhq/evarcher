@@ -1,5 +1,6 @@
 import { EvMap } from './data_struct'
 import type { EvarcherOption, EvarcherReturn, InternalEvOption } from './types'
+import { createTrace, updated_by_handler } from './utils'
 
 type Enable<E> = EvarcherReturn<E>['enable']
 type Disable<E> = EvarcherReturn<E>['disable']
@@ -19,7 +20,7 @@ const merge_option = <E, K extends keyof E>(
         tag: false,
         defaultNamespace: DEFAULT_NAMESPACE,
         defaultEnabled: false,
-        strictMode: false,
+        trace: false,
     }
     return Object.assign(default_option, option ?? {})
 }
@@ -32,15 +33,16 @@ export const createEvarcher = <
 ): EvarcherReturn<E> => {
     const opt = merge_option(option)
     const ev_map = new EvMap<E>()
+    const trace = createTrace(opt.trace)
 
-    const enable: Enable<E> = (event, callback) => {
+    const enable: Enable<E> = (event, handler) => {
         if (!ev_map.has(event)) {
-            if (opt.strictMode) {
-                throw new Error(`Event: ${event as string} was not registered`)
-            }
+            trace('ERROR', `(enable)event#${String(event)}: not found`)
             return
         }
-        if (!callback) {
+
+        if (!handler) {
+            trace('WARN', `(enable)event#${String(event)}: ALL ENABLE`)
             ev_map.set(
                 event,
                 ev_map.get(event)!.map((unit) => ({
@@ -50,56 +52,51 @@ export const createEvarcher = <
             )
             return
         }
-        const target = ev_map.get(event)!.find((unit) =>
-            unit.callback === callback
+
+        ev_map.set(
+            event,
+            updated_by_handler(
+                ev_map.get(event)!,
+                handler,
+                () => ({ enabled: true }),
+            ),
         )
-        if (!target) {
-            if (opt.strictMode) {
-                throw new Error(
-                    `Event: ${event as string} does not found this callback`,
-                )
-            }
-            return
-        }
-        target.enabled = true
     }
 
-    const disable: Disable<E> = (event, callback) => {
+    const disable: Disable<E> = (event, handler) => {
         if (!ev_map.has(event)) {
-            if (opt.strictMode) {
-                throw new Error(`Event: ${event as string} was not registered`)
-            }
+            trace('ERROR', `(disable)event#${String(event)}: not found`)
             return
         }
-        if (!callback) {
+
+        if (!handler) {
+            trace('WARN', `(disable)event#${String(event)}: ALL DISABLE`)
             ev_map.set(
                 event,
                 ev_map.get(event)!.map((unit) => ({ ...unit, enabled: false })),
             )
             return
         }
-        const target = ev_map.get(event)!.find((unit) =>
-            unit.callback === callback
+
+        ev_map.set(
+            event,
+            updated_by_handler(
+                ev_map.get(event)!,
+                handler,
+                () => ({ enabled: false }),
+            ),
         )
-        if (!target) {
-            if (opt.strictMode) {
-                throw new Error(
-                    `Event: ${event as string} does not found this callback`,
-                )
-            }
-            return
-        }
-        target.enabled = false
     }
 
-    const register: Register<E> = (event, callback) => {
+    const register: Register<E> = (event, handler) => {
         const unit = {
-            callback,
+            handler,
             enabled: opt.defaultEnabled,
             namespace: opt.defaultNamespace,
             priority: DEFAULT_PRIORITY,
             once: false,
         }
+
         if (!ev_map.has(event)) {
             ev_map.set(event, [unit])
         } else {
@@ -107,17 +104,18 @@ export const createEvarcher = <
             ev_map.set(event, [...units, unit])
         }
 
+        trace('INFO', `(register)event#${String(event)}`)
+
         return {
-            enable: () => enable(event, callback),
-            disable: () => disable(event, callback),
+            enable: () => enable(event, handler),
+            disable: () => disable(event, handler),
         }
     }
 
-    const once: Once<E> = (event, callback) => {
-        const enabled = opt.defaultEnabled ?? false
+    const once: Once<E> = (event, handler) => {
         const unit = {
-            callback,
-            enabled,
+            handler,
+            enabled: opt.defaultEnabled,
             namespace: opt.defaultNamespace,
             priority: DEFAULT_PRIORITY,
             once: true,
@@ -130,44 +128,48 @@ export const createEvarcher = <
             ev_map.set(event, [...units, unit])
         }
 
+        trace('INFO', `(once)event#${String(event)}`)
+
         return {
-            enable: () => enable(event, callback),
-            disable: () => disable(event, callback),
+            enable: () => enable(event, handler),
+            disable: () => disable(event, handler),
         }
     }
 
-    const unregister: Unregister<E> = (event, callback) => {
+    const unregister: Unregister<E> = (event, handler) => {
         if (!ev_map.has(event)) {
-            if (opt.strictMode) {
-                throw new Error(`Event: ${event as string} was not registered`)
-            }
+            trace('ERROR', `(unregister)event#${String(event)}: not found`)
             return
         }
-        if (!callback) {
+
+        if (!handler) {
             ev_map.set(event, [])
             return
         }
+
         ev_map.set(
             event,
-            ev_map.get(event)!.filter((unit) => unit.callback !== callback),
+            ev_map.get(event)!.filter((unit) => unit.handler !== handler),
         )
     }
 
     const emit: Emit<E> = (event, payload) => {
         if (!ev_map.has(event)) {
-            if (opt.strictMode) {
-                throw new Error(`Event: ${event as string} was not registered`)
-            }
+            trace('ERROR', `(emit)event#${String(event)}: not found`)
             return
         }
 
         const enabled_units = ev_map
             .get(event)!
             .filter((unit) => unit.enabled)
-            .map((unit) => unit.callback)
+            .map((unit) => ({
+                handler: unit.handler,
+                once: unit.once,
+            }))
 
         for (const h of enabled_units) {
-            h(payload)
+            h.handler(payload)
+            if (h.once) unregister(event, h.handler)
         }
     }
 

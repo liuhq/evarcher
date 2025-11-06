@@ -1,7 +1,7 @@
 import type { Handler } from './types'
 
 export interface HandlerUnit<E, K extends keyof E> {
-    callback: Handler<E[K]>
+    handler: Handler<E[K]>
     enabled: boolean
     namespace: string
     priority: number

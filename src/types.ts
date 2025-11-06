@@ -8,7 +8,7 @@ export type InternalEvOption<E, K extends keyof E> = {
     defaultNamespace: string
     /** default enabled, or not: false */
     defaultEnabled: boolean
-    strictMode: boolean
+    trace: boolean
 }
 
 export type EvarcherOption<E, K extends keyof E> = Partial<
