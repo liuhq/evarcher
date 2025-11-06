@@ -97,14 +97,10 @@ export const createEvarcher = <
             once: false,
         }
 
-        if (!ev_map.has(event)) {
-            ev_map.set(event, [unit])
-        } else {
-            const units = ev_map.get_or(event, [])
-            ev_map.set(event, [...units, unit])
-        }
-
         trace('INFO', `(register)event#${String(event)}`)
+
+        const units = ev_map.get_or(event, [])
+        ev_map.set(event, [...units, unit])
 
         return {
             enable: () => enable(event, handler),
@@ -121,14 +117,10 @@ export const createEvarcher = <
             once: true,
         }
 
-        if (!ev_map.has(event)) {
-            ev_map.set(event, [unit])
-        } else {
-            const units = ev_map.get_or(event, [])
-            ev_map.set(event, [...units, unit])
-        }
-
         trace('INFO', `(once)event#${String(event)}`)
+
+        const units = ev_map.get_or(event, [])
+        ev_map.set(event, [...units, unit])
 
         return {
             enable: () => enable(event, handler),
