@@ -2,8 +2,8 @@ import type { HandlerUnit } from './data_struct'
 import type { Handler } from './types'
 
 type Level = 'INFO' | 'WARN' | 'ERROR'
-
-export const createTrace = (enabled: boolean) => {
+export type Trace = (level: Level, message: string) => void
+export const createTrace = (enabled: boolean): Trace => {
     const report: { [L in Level]: (message: string) => void } = {
         INFO: (msg) => {
             console.info(msg)

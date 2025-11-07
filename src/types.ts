@@ -18,23 +18,23 @@ export type EvarcherOption<E, K extends keyof E> = Partial<
 export type EvarcherReturn<E> = {
     register: <K extends keyof E>(
         event: K,
-        callback: Handler<E[K]>,
+        handler: Handler<E[K]>,
     ) => RegisterReturn
     once: <K extends keyof E>(
         event: K,
-        callback: Handler<E[K]>,
+        handler: Handler<E[K]>,
     ) => RegisterReturn
     unregister: <K extends keyof E>(
         event: K,
-        callback?: Handler<E[K]>,
+        handler?: Handler<E[K]>,
     ) => void
     enable: <K extends keyof E>(
         event: K,
-        callback?: Handler<E[K]>,
+        handler?: Handler<E[K]>,
     ) => void
     disable: <K extends keyof E>(
         event: K,
-        callback?: Handler<E[K]>,
+        handler?: Handler<E[K]>,
     ) => void
     emit: <K extends keyof E>(
         event: K,

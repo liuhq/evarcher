@@ -1,13 +1,11 @@
-import { EvMap } from './data_struct'
-import type { EvarcherOption, EvarcherReturn, InternalEvOption } from './types'
-import { createTrace, updated_by_handler } from './utils'
-
-type Enable<E> = EvarcherReturn<E>['enable']
-type Disable<E> = EvarcherReturn<E>['disable']
-type Register<E> = EvarcherReturn<E>['register']
-type Once<E> = EvarcherReturn<E>['once']
-type Unregister<E> = EvarcherReturn<E>['unregister']
-type Emit<E> = EvarcherReturn<E>['emit']
+import { EvMap, type HandlerUnit } from './data_struct'
+import type {
+    EvarcherOption,
+    EvarcherReturn,
+    Handler,
+    InternalEvOption,
+} from './types'
+import { createTrace, type Trace, updated_by_handler } from './utils'
 
 const DEFAULT_NAMESPACE = 'GLOBAL'
 const DEFAULT_PRIORITY = 0
@@ -25,6 +23,183 @@ const merge_option = <E, K extends keyof E>(
     return Object.assign(default_option, option ?? {})
 }
 
+type Context<E, K extends keyof E> = {
+    ev_map: EvMap<E>
+    opt: InternalEvOption<E, K>
+    trace: Trace
+}
+
+type Enable<E> = EvarcherReturn<E>['enable']
+type Disable<E> = EvarcherReturn<E>['disable']
+type Register<E> = EvarcherReturn<E>['register']
+type Once<E> = EvarcherReturn<E>['once']
+type Unregister<E> = EvarcherReturn<E>['unregister']
+type Emit<E> = EvarcherReturn<E>['emit']
+
+const enable_inner = <E, K extends keyof E>(
+    ctx: Context<E, K>,
+    event: K,
+    handler?: Handler<E[K]>,
+) => {
+    if (!ctx.ev_map.has(event)) {
+        ctx.trace('ERROR', `(enable)event#${String(event)}: not found`)
+        return
+    }
+
+    if (!handler) {
+        ctx.trace('WARN', `(enable)event#${String(event)}: ALL ENABLE`)
+        ctx.ev_map.set(
+            event,
+            ctx.ev_map.get(event)!.map((unit) => ({
+                ...unit,
+                enabled: true,
+            })),
+        )
+        return
+    }
+
+    ctx.ev_map.set(
+        event,
+        updated_by_handler(
+            ctx.ev_map.get(event)!,
+            handler,
+            () => ({ enabled: true }),
+        ),
+    )
+}
+
+const disable_inner = <E, K extends keyof E>(
+    ctx: Context<E, K>,
+    event: K,
+    handler?: Handler<E[K]>,
+) => {
+    if (!ctx.ev_map.has(event)) {
+        ctx.trace('ERROR', `(disable)event#${String(event)}: not found`)
+        return
+    }
+
+    if (!handler) {
+        ctx.trace('WARN', `(disable)event#${String(event)}: ALL DISABLE`)
+        ctx.ev_map.set(
+            event,
+            ctx.ev_map.get(event)!.map((unit) => ({ ...unit, enabled: false })),
+        )
+        return
+    }
+
+    ctx.ev_map.set(
+        event,
+        updated_by_handler(
+            ctx.ev_map.get(event)!,
+            handler,
+            () => ({ enabled: false }),
+        ),
+    )
+}
+
+const register_inner = <E, K extends keyof E>(
+    ctx: Context<E, K>,
+    actions: {
+        enable: Enable<E>
+        disable: Disable<E>
+    },
+    event: K,
+    handler: Handler<E[K]>,
+) => {
+    const unit: HandlerUnit<E, K> = {
+        handler,
+        enabled: ctx.opt.defaultEnabled,
+        namespace: ctx.opt.defaultNamespace,
+        priority: DEFAULT_PRIORITY,
+        once: false,
+    }
+
+    ctx.trace('INFO', `(register)event#${String(event)}`)
+
+    const units = ctx.ev_map.get_or(event, [])
+    ctx.ev_map.set(event, [...units, unit])
+
+    return {
+        enable: () => actions.enable(event, handler),
+        disable: () => actions.disable(event, handler),
+    }
+}
+
+const once_inner = <E, K extends keyof E>(
+    ctx: Context<E, K>,
+    actions: {
+        enable: Enable<E>
+        disable: Disable<E>
+    },
+    event: K,
+    handler: Handler<E[K]>,
+) => {
+    const unit: HandlerUnit<E, K> = {
+        handler,
+        enabled: ctx.opt.defaultEnabled,
+        namespace: ctx.opt.defaultNamespace,
+        priority: DEFAULT_PRIORITY,
+        once: true,
+    }
+
+    ctx.trace('INFO', `(once)event#${String(event)}`)
+
+    const units = ctx.ev_map.get_or(event, [])
+    ctx.ev_map.set(event, [...units, unit])
+
+    return {
+        enable: () => actions.enable(event, handler),
+        disable: () => actions.disable(event, handler),
+    }
+}
+
+const unregister_inner = <E, K extends keyof E>(
+    ctx: Context<E, K>,
+    event: K,
+    handler?: Handler<E[K]>,
+) => {
+    if (!ctx.ev_map.has(event)) {
+        ctx.trace('ERROR', `(unregister)event#${String(event)}: not found`)
+        return
+    }
+
+    if (!handler) {
+        ctx.ev_map.set(event, [])
+        return
+    }
+
+    ctx.ev_map.set(
+        event,
+        ctx.ev_map.get(event)!.filter((unit) => unit.handler !== handler),
+    )
+}
+
+const emit_inner = <E, K extends keyof E>(
+    ctx: Context<E, K>,
+    actions: { unregister: Unregister<E> },
+    event: K,
+    payload?: E[K],
+) => {
+    if (!ctx.ev_map.has(event)) {
+        ctx.trace('ERROR', `(emit)event#${String(event)}: not found`)
+        return
+    }
+
+    const enabled_units = ctx
+        .ev_map
+        .get(event)!
+        .filter((unit) => unit.enabled)
+        .map((unit) => ({
+            handler: unit.handler,
+            once: unit.once,
+        }))
+
+    for (const h of enabled_units) {
+        h.handler(payload)
+        if (h.once) actions.unregister(event, h.handler)
+    }
+}
+
 export const createEvarcher = <
     E,
     K extends keyof E = keyof E,
@@ -34,136 +209,25 @@ export const createEvarcher = <
     const opt = merge_option(option)
     const ev_map = new EvMap<E>()
     const trace = createTrace(opt.trace)
+    const ctx: Context<E, K> = { ev_map, opt, trace }
 
-    const enable: Enable<E> = (event, handler) => {
-        if (!ev_map.has(event)) {
-            trace('ERROR', `(enable)event#${String(event)}: not found`)
-            return
-        }
+    const enable: Enable<E> = (event, handler) =>
+        enable_inner(ctx, event, handler)
 
-        if (!handler) {
-            trace('WARN', `(enable)event#${String(event)}: ALL ENABLE`)
-            ev_map.set(
-                event,
-                ev_map.get(event)!.map((unit) => ({
-                    ...unit,
-                    enabled: true,
-                })),
-            )
-            return
-        }
+    const disable: Disable<E> = (event, handler) =>
+        disable_inner(ctx, event, handler)
 
-        ev_map.set(
-            event,
-            updated_by_handler(
-                ev_map.get(event)!,
-                handler,
-                () => ({ enabled: true }),
-            ),
-        )
-    }
+    const register: Register<E> = (event, handler) =>
+        register_inner(ctx, { enable, disable }, event, handler)
 
-    const disable: Disable<E> = (event, handler) => {
-        if (!ev_map.has(event)) {
-            trace('ERROR', `(disable)event#${String(event)}: not found`)
-            return
-        }
+    const once: Once<E> = (event, handler) =>
+        once_inner(ctx, { enable, disable }, event, handler)
 
-        if (!handler) {
-            trace('WARN', `(disable)event#${String(event)}: ALL DISABLE`)
-            ev_map.set(
-                event,
-                ev_map.get(event)!.map((unit) => ({ ...unit, enabled: false })),
-            )
-            return
-        }
+    const unregister: Unregister<E> = (event, handler) =>
+        unregister_inner(ctx, event, handler)
 
-        ev_map.set(
-            event,
-            updated_by_handler(
-                ev_map.get(event)!,
-                handler,
-                () => ({ enabled: false }),
-            ),
-        )
-    }
-
-    const register: Register<E> = (event, handler) => {
-        const unit = {
-            handler,
-            enabled: opt.defaultEnabled,
-            namespace: opt.defaultNamespace,
-            priority: DEFAULT_PRIORITY,
-            once: false,
-        }
-
-        trace('INFO', `(register)event#${String(event)}`)
-
-        const units = ev_map.get_or(event, [])
-        ev_map.set(event, [...units, unit])
-
-        return {
-            enable: () => enable(event, handler),
-            disable: () => disable(event, handler),
-        }
-    }
-
-    const once: Once<E> = (event, handler) => {
-        const unit = {
-            handler,
-            enabled: opt.defaultEnabled,
-            namespace: opt.defaultNamespace,
-            priority: DEFAULT_PRIORITY,
-            once: true,
-        }
-
-        trace('INFO', `(once)event#${String(event)}`)
-
-        const units = ev_map.get_or(event, [])
-        ev_map.set(event, [...units, unit])
-
-        return {
-            enable: () => enable(event, handler),
-            disable: () => disable(event, handler),
-        }
-    }
-
-    const unregister: Unregister<E> = (event, handler) => {
-        if (!ev_map.has(event)) {
-            trace('ERROR', `(unregister)event#${String(event)}: not found`)
-            return
-        }
-
-        if (!handler) {
-            ev_map.set(event, [])
-            return
-        }
-
-        ev_map.set(
-            event,
-            ev_map.get(event)!.filter((unit) => unit.handler !== handler),
-        )
-    }
-
-    const emit: Emit<E> = (event, payload) => {
-        if (!ev_map.has(event)) {
-            trace('ERROR', `(emit)event#${String(event)}: not found`)
-            return
-        }
-
-        const enabled_units = ev_map
-            .get(event)!
-            .filter((unit) => unit.enabled)
-            .map((unit) => ({
-                handler: unit.handler,
-                once: unit.once,
-            }))
-
-        for (const h of enabled_units) {
-            h.handler(payload)
-            if (h.once) unregister(event, h.handler)
-        }
-    }
+    const emit: Emit<E> = (event, payload) =>
+        emit_inner(ctx, { unregister }, event, payload)
 
     return {
         enable,
