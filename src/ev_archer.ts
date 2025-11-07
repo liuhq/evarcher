@@ -11,9 +11,9 @@ const DEFAULT_NAMESPACE = 'GLOBAL'
 const DEFAULT_PRIORITY = 0
 
 const merge_option = <E, K extends keyof E>(
-    option: EvarcherOption<E, K> | undefined,
-): InternalEvOption<E, K> => {
-    const default_option: InternalEvOption<E, K> = {
+    option: EvarcherOption | undefined,
+): InternalEvOption => {
+    const default_option: InternalEvOption = {
         id: 0,
         tag: false,
         defaultNamespace: DEFAULT_NAMESPACE,
@@ -23,9 +23,9 @@ const merge_option = <E, K extends keyof E>(
     return Object.assign(default_option, option ?? {})
 }
 
-type Context<E, K extends keyof E> = {
+type Context<E> = {
     ev_map: EvMap<E>
-    opt: InternalEvOption<E, K>
+    opt: InternalEvOption
     trace: Trace
 }
 
@@ -37,7 +37,7 @@ type Unregister<E> = EvarcherReturn<E>['unregister']
 type Emit<E> = EvarcherReturn<E>['emit']
 
 const enable_inner = <E, K extends keyof E>(
-    ctx: Context<E, K>,
+    ctx: Context<E>,
     event: K,
     handler?: Handler<E[K]>,
 ) => {
@@ -69,7 +69,7 @@ const enable_inner = <E, K extends keyof E>(
 }
 
 const disable_inner = <E, K extends keyof E>(
-    ctx: Context<E, K>,
+    ctx: Context<E>,
     event: K,
     handler?: Handler<E[K]>,
 ) => {
@@ -98,7 +98,7 @@ const disable_inner = <E, K extends keyof E>(
 }
 
 const register_inner = <E, K extends keyof E>(
-    ctx: Context<E, K>,
+    ctx: Context<E>,
     actions: {
         enable: Enable<E>
         disable: Disable<E>
@@ -126,7 +126,7 @@ const register_inner = <E, K extends keyof E>(
 }
 
 const once_inner = <E, K extends keyof E>(
-    ctx: Context<E, K>,
+    ctx: Context<E>,
     actions: {
         enable: Enable<E>
         disable: Disable<E>
@@ -154,7 +154,7 @@ const once_inner = <E, K extends keyof E>(
 }
 
 const unregister_inner = <E, K extends keyof E>(
-    ctx: Context<E, K>,
+    ctx: Context<E>,
     event: K,
     handler?: Handler<E[K]>,
 ) => {
@@ -175,7 +175,7 @@ const unregister_inner = <E, K extends keyof E>(
 }
 
 const emit_inner = <E, K extends keyof E>(
-    ctx: Context<E, K>,
+    ctx: Context<E>,
     actions: { unregister: Unregister<E> },
     event: K,
     payload?: E[K],
@@ -200,16 +200,13 @@ const emit_inner = <E, K extends keyof E>(
     }
 }
 
-export const createEvarcher = <
-    E,
-    K extends keyof E = keyof E,
->(
-    option?: EvarcherOption<E, K>,
+export const createEvarcher = <E>(
+    option?: EvarcherOption,
 ): EvarcherReturn<E> => {
     const opt = merge_option(option)
     const ev_map = new EvMap<E>()
     const trace = createTrace(opt.trace)
-    const ctx: Context<E, K> = { ev_map, opt, trace }
+    const ctx: Context<E> = { ev_map, opt, trace }
 
     const enable: Enable<E> = (event, handler) =>
         enable_inner(ctx, event, handler)

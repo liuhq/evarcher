@@ -2,7 +2,7 @@ export type FnVoid = (...any: any[]) => void
 
 export type Handler<P = any> = (payload?: P) => void
 
-export type InternalEvOption<E, K extends keyof E> = {
+export type InternalEvOption = {
     id: number
     tag: boolean
     defaultNamespace: string
@@ -11,9 +11,7 @@ export type InternalEvOption<E, K extends keyof E> = {
     trace: boolean
 }
 
-export type EvarcherOption<E, K extends keyof E> = Partial<
-    InternalEvOption<E, K>
->
+export type EvarcherOption = Partial<InternalEvOption>
 
 export type EvarcherReturn<E> = {
     register: <K extends keyof E>(
