@@ -1,6 +1,11 @@
 {
   "name": "evarcher",
   "version": "0.1.0",
+  "description": "A type-safe, zero-dependency event manager.",
+  "author": {
+    "name": "Horace Liu",
+    "email": "im.liuhq@gmail.com"
+  },
   "type": "module",
   "devDependencies": {
     "@types/bun": "latest",
