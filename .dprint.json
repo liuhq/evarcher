@@ -16,7 +16,8 @@
   },
   "excludes": [
     "**/node_modules",
-    "**/*.lock"
+    "**/*.lock",
+    "dist"
   ],
   "plugins": [
     "https://plugins.dprint.dev/typescript-0.95.11.wasm",
