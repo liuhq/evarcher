@@ -3,15 +3,18 @@ export type FnVoid = (...any: any[]) => void
 export type Handler<P = any> = (payload?: P) => void
 
 export type InternalEvOption = {
+    /** WIP */
     id: number
+    /** WIP */
     tag: boolean
+    /** WIP */
     defaultNamespace: string
     /** default enabled, or not: false */
     defaultEnabled: boolean
     trace: boolean
 }
 
-export type EvarcherOption = Partial<InternalEvOption>
+export type EvarcherOption = Partial<Pick<InternalEvOption, 'defaultEnabled'>>
 
 export type EvarcherReturn<E> = {
     register: <K extends keyof E>(
