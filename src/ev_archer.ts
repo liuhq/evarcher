@@ -178,7 +178,8 @@ const emit_inner = <E, K extends keyof E>(
     ctx: Context<E>,
     actions: { unregister: Unregister<E> },
     event: K,
-    payload?: E[K],
+    payload: E[K] extends void | undefined ? [payload?: undefined]
+        : [payload: E[K]],
 ) => {
     if (!ctx.ev_map.has(event)) {
         ctx.trace('ERROR', `(emit)event#${String(event)}: not found`)
@@ -195,7 +196,7 @@ const emit_inner = <E, K extends keyof E>(
         }))
 
     for (const h of enabled_units) {
-        h.handler(payload)
+        h.handler(...payload)
         if (h.once) actions.unregister(event, h.handler)
     }
 }
@@ -223,7 +224,7 @@ export const createEvarcher = <E>(
     const unregister: Unregister<E> = (event, handler) =>
         unregister_inner(ctx, event, handler)
 
-    const emit: Emit<E> = (event, payload) =>
+    const emit: Emit<E> = (event, ...payload) =>
         emit_inner(ctx, { unregister }, event, payload)
 
     return {

@@ -1,6 +1,9 @@
 export type FnVoid = (...any: any[]) => void
 
-export type Handler<P = any> = (payload?: P) => void
+export type Handler<P> = (
+    ...payload: P extends void | undefined ? [payload?: undefined]
+        : [payload: P]
+) => void
 
 export type InternalEvOption = {
     /** WIP */
@@ -39,7 +42,8 @@ export type EvarcherReturn<E> = {
     ) => void
     emit: <K extends keyof E>(
         event: K,
-        payload?: E[K],
+        ...payload: E[K] extends void | undefined ? [payload?: undefined]
+            : [payload: E[K]]
     ) => void
 }
 
