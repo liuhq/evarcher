@@ -61,7 +61,6 @@ register('report:active', (p) => console.log(`Active: ${p}`))
 
 // Use the same handler reference to enable after registering
 const sendPos: Handler<MyEvents['send:pos']> = (p) => {
-    if (!p) return
     console.log(`Current Position: (${p.x}, ${p.y})`)
 }
 
@@ -103,14 +102,18 @@ Create an evarcher instance to start event management.
 - [`disable`](#disable)
 - [`emit`](#emit)
 
-`Handler`: `(payload: any) => void` - the handler
+`Handler<P>`: the handler type
+
+```ts
+(...payload: P extends void | undefined ? [payload?: undefined] : [payload: P]) => void
+```
 
 ### register
 
 <!-- dprint-ignore -->
 ```ts
 <K extends keyof E>(event: K, handler: Handler<E[K]>) => RegisterReturn
-```
+````
 
 Register a handler to an event. `EvarcherOption.defaultEnabled` controls default to enable or disable.
 
@@ -184,7 +187,7 @@ Same as `enable`, but disable a/all handler(s) in the event.
 
 <!-- dprint-ignore -->
 ```ts
-<K extends keyof E>(event: K, payload?: E[K]) => void
+<K extends keyof E>(event: K, ...payload: E[K] extends void | undefined ? [payload?: undefined] : [payload: E[K]) => void
 ```
 
 Emit an event (with an optional data). It will call all enabled handlers of this event.
