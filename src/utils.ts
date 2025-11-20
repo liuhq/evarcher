@@ -1,4 +1,4 @@
-import type { HandlerUnit } from './data_struct'
+import type { HandlerUnit } from './ex_map'
 import type { Handler } from './types'
 
 type Level = 'INFO' | 'WARN' | 'ERROR'
@@ -23,10 +23,27 @@ export const createTrace = (enabled: boolean): Trace => {
     }
 }
 
-export const updated_by_handler = <E, K extends keyof E>(
-    units: HandlerUnit<E, K>[],
-    handler: Handler<E[K]>,
-    updater: (item: Partial<HandlerUnit<E, K>>) => Partial<HandlerUnit<E, K>>,
-): HandlerUnit<E, K>[] => {
-    return units.map((h) => h.handler === handler ? { ...h, ...updater(h) } : h)
+export type UpdaterProcessor<E, K extends keyof E, P = HandlerUnit<E, K>> = (
+    unit: Partial<P>,
+) => Partial<P>
+
+export const updater = <E, K extends keyof E, P = HandlerUnit<E, K>>(
+    units: P[],
+) => {
+    return {
+        at: <PK extends keyof P>(path: [PK, P[PK]] | '*') => {
+            return {
+                by: (processor: UpdaterProcessor<E, K, P>): P[] =>
+                    units.map((u) => {
+                        if (path === '*' || path.length < 2) {
+                            return { ...u, ...processor(u) }
+                        }
+
+                        return u[path[0]] === path[1]
+                            ? { ...u, ...processor(u) }
+                            : u
+                    }),
+            }
+        },
+    }
 }
