@@ -1,0 +1,9 @@
+{
+  "ignorePatterns": ["node_modules", "dist"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "plugins": ["typescript", "import", "jsdoc"]
+}
