@@ -10,6 +10,7 @@
   "devDependencies": {
     "@types/bun": "latest",
     "bun-plugin-dts": "^0.3.0",
+    "oxlint": "^1.29.0",
     "typescript": "^5.9.3"
   },
   "files": [
@@ -18,6 +19,8 @@
   "exports": "./dist/main.js",
   "types": "dist/main.d.ts",
   "scripts": {
+    "lint:check": "bunx oxlint",
+    "prebuild": "bun run lint:check",
     "build": "bun build.ts"
   }
 }
