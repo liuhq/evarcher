@@ -1,12 +1,3 @@
-import type { Handler } from './types'
-
-export interface HandlerUnit<E, K extends keyof E> {
-    handler: Handler<E[K]>
-    enabled: boolean
-    priority: number
-    once: boolean
-}
-
 export class ExtendMap<K, V> extends Map<K, V> {
     constructor(items?: Iterable<readonly [K, V]>) {
         if (items) {
@@ -19,6 +10,10 @@ export class ExtendMap<K, V> extends Map<K, V> {
 
     static from<K, V>(items: Iterable<readonly [K, V]>): ExtendMap<K, V> {
         return new this(items)
+    }
+
+    clone(): ExtendMap<K, V> {
+        return ExtendMap.from(this)
     }
 
     get_or(
