@@ -19,8 +19,8 @@
   "exports": "./dist/main.js",
   "types": "dist/main.d.ts",
   "scripts": {
-    "lint:check": "bunx oxlint",
-    "prebuild": "bun run lint:check",
+    "lint": "bunx oxlint",
+    "prebuild": "bun run lint",
     "build": "bun build.ts"
   }
 }
