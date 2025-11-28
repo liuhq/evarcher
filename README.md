@@ -33,14 +33,7 @@ export type MyEvents = {
 }
 
 // Export all controls
-export const {
-    register,
-    once,
-    unregister,
-    enable,
-    disable,
-    emit,
-} = createEvarcher<MyEvents>({
+export const { ns } = createEvarcher<MyEvents>({
     // Enable handlers when registering
     defaultEnabled: true,
 })
@@ -52,30 +45,35 @@ file `main.ts`
 
 ```ts
 import { Handler } from 'evarcher'
-import { emit, enable, once, register } from './event'
+import { ns } from './event'
 import type { MyEvents } from './event'
 
+const myns = ns('myns')
+
 // Register handlers
-register('open', () => console.log('opened'))
-register('report:active', (p) => console.log(`Active: ${p}`))
+myns('open').register(() => console.log('opened'))
+myns('report:active').register((p) => console.log(`Active: ${p}`))
 
 // Use the same handler reference to enable after registering
 const sendPos: Handler<MyEvents['send:pos']> = (p) => {
     console.log(`Current Position: (${p.x}, ${p.y})`)
 }
+const sendPosEv = myns('send:pos')
 
 // Call `enable()/disable()` to enable/disable a handler after registering
-register('send:pos', sendPos).disable()
+sendPosEv.register(sendPos).disable()
 
 // Enable it later when needed
-enable('send:pos', sendPos)
+sendPosEv.enable(sendPos)
 
 // Register a run-once handler
-once('send:message', (p) => console.log(`Message: ${p}`))
+myns('send:message').once((p) => console.log(`Message: ${p}`))
 
-// Emit an event with optional-data
-emit('open')
-emit('send:message', 'Success!')
+// Emit an event
+myns('open').emit()
+
+// Emit an event with data
+myns('send:message').emit('Success!')
 ```
 
 ## API
@@ -95,12 +93,8 @@ Create an evarcher instance to start event management.
 
 `EvarcherReturn`
 
-- [`register`](#register)
-- [`once`](#once)
-- [`unregister`](#unregister)
-- [`enable`](#enable)
-- [`disable`](#disable)
-- [`emit`](#emit)
+- [`ns`](#ns)
+- [`ev`](#ev)
 
 `Handler<P>`: the handler type
 
@@ -108,11 +102,44 @@ Create an evarcher instance to start event management.
 (...payload: P extends void | undefined ? [payload?: undefined] : [payload: P]) => void
 ```
 
-### register
+### ns
 
 <!-- dprint-ignore -->
 ```ts
-<K extends keyof E>(event: K, handler: Handler<E[K]>) => RegisterReturn
+(namespace: string) => EvFn<E>
+````
+
+return the event accessor [`ev`](#ev) under this `namespace`
+
+- `namespace`: `string` - Which namespace you want to access
+
+### ev
+
+<!-- dprint-ignore -->
+```ts
+EvFn<E> = <K extends keyof E>(event: K) => Operator<E, K>
+```
+
+- `event`: Which event you want to access
+
+[`Operator`](#operator)
+
+### Operator
+
+`Operator<E, K extends keyof E>`
+
+- [`register`](#register)
+- [`once`](#once)
+- [`unregister`](#unregister)
+- [`enable`](#enable)
+- [`disable`](#disable)
+- [`emit`](#emit)
+
+#### register
+
+<!-- dprint-ignore -->
+```ts
+(handler: Handler<E[K]>) => RegisterReturn
 ````
 
 Register a handler to an event. `EvarcherOption.defaultEnabled` controls default to enable or disable.
@@ -122,20 +149,20 @@ Register a handler to an event. `EvarcherOption.defaultEnabled` controls default
 - `enable`: `() => void`: Enable the handler immediately
 - `disable`: `() => void`: Disable the handler immediately
 
-### once
+#### once
 
 <!-- dprint-ignore -->
 ```ts
-<K extends keyof E>(event: K, handler: Handler<E[K]>) => RegisterReturn
+(handler: Handler<E[K]>) => RegisterReturn
 ```
 
 Register a handler which only run once to an event, and then automatically unregisters. `EvarcherOption.defaultEnabled` controls default to enable or disable. Also can immediately enable/disable via `RegisterReturn`
 
-### unregister
+#### unregister
 
 <!-- dprint-ignore -->
 ```ts
-<K extends keyof E>(event: K, handler?: Handler<E[K]>) => void
+(handler?: Handler<E[K]>) => void
 ```
 
 Unregister a handler in the event. Match the same handler by function reference, so you must store the handler in a variable.
@@ -143,21 +170,21 @@ Unregister a handler in the event. Match the same handler by function reference,
 ```ts
 const handler = (p) => { ... }
 
-register('clear', handler)
-unregister('clear', handler)
+ev('clear').register(handler)
+ev('clear').unregister(handler)
 ```
 
 the `handler` parameter is optional. It means to remove all handlers of the event when pass `event` without `handler`.
 
 ```ts
-unregister('clear') // remove all handlers of the `clear` event
+ev('clear').unregister() // remove all handlers of the `clear` event
 ```
 
-### enable
+#### enable
 
 <!-- dprint-ignore -->
 ```ts
-<K extends keyof E>(event: K, handler?: Handler<E[K]>) => void
+(handler?: Handler<E[K]>) => void
 ```
 
 Enable a handler in the event. Same as `unregister` that it must be passing the handler variable.
@@ -165,44 +192,47 @@ Enable a handler in the event. Same as `unregister` that it must be passing the 
 ```ts
 const handler = (p) => { ... }
 
-enable('turn:on', handler)
+ev('turn:on').enable(handler)
 ```
 
 the `handler` parameter is optional, and it means to enable all handlers of the event.
 
 ```ts
-enable('turn:on') // enable all handlers of the `turn:on` event
+ev('turn:on').enable() // enable all handlers of the `turn:on` event
 ```
 
-### disable
+#### disable
 
 <!-- dprint-ignore -->
 ```ts
-<K extends keyof E>(event: K, handler?: Handler<E[K]>) => void
+(handler?: Handler<E[K]>) => void
 ```
 
-Same as `enable`, but disable a/all handler(s) in the event.
+Same as [`enable`](#enable), but disable a/all handler(s) in the event.
 
-### emit
+#### emit
 
 <!-- dprint-ignore -->
 ```ts
-<K extends keyof E>(event: K, ...payload: E[K] extends void | undefined ? [payload?: undefined] : [payload: E[K]) => void
+(...payload: E[K] extends void | undefined
+    ? [payload?: undefined]
+    : [payload: E[K]]
+) => void
 ```
 
 Emit an event (with an optional data). It will call all enabled handlers of this event.
 
 ```ts
-emit('run') // call all enabled handlers of the `run` event
+ev('run').emit() // call all enabled handlers of the `run` event
 
-emit('report:pos', { x: 1, y: 2 }) // pass data to all enabled handlers
+ev('report:pos').emit({ x: 1, y: 2 }) // pass data to all enabled handlers
 ```
 
 ## Roadmap
 
 - [ ] Async APIs.
 - [ ] Get event and handlers status.
-- [ ] Use namespace to manage handlers.
+- [x] Use namespace to manage handlers.
 - [ ] Use priority to control the order of handlers.
 - [ ] Refactor data struct `HandlerUnit` that evarcher can compare handlers without the variable reference.
 
