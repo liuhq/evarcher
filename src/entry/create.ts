@@ -1,4 +1,3 @@
-import type { DEFAULT_EVENT } from '../constants'
 import { createContext } from '../data/context'
 import { ev_ } from '../data/event'
 import { ExtendMap } from '../data/ex_map'
@@ -16,7 +15,7 @@ export const createEvarcher = <E>(
     const default_ev_map = new ExtendMap<keyof E, HandlerUnit<E, any>[]>()
     const default_item = [[default_namespace, default_ev_map]] as const
 
-    const ctx = createContext<E, typeof DEFAULT_EVENT>(default_item, opt)
+    const ctx = createContext<E>(default_item, opt)
 
     const ns: EvarcherReturn<E>['ns'] = (namespace) => ns_(ctx, namespace)
     const ev: EvarcherReturn<E>['ev'] = (event) => {
