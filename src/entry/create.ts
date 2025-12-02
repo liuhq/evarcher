@@ -23,5 +23,11 @@ export const createEvarcher = <E>(
         return ev_(ctx, default_namespace, get_ev_map, event)
     }
 
-    return { ns, ev }
+    return {
+        ns,
+        ev,
+        get DEFAULT_NAMESPACE() {
+            return default_namespace
+        },
+    }
 }
