@@ -1,8 +1,28 @@
+<!-- omit from toc -->
 # evarcher
 
 A **type-safe**, **zero-dependency** event manager.
 
 > ESM only | full typescript support
+
+- [Installation](#installation)
+- [Simple Example](#simple-example)
+- [Quick Start](#quick-start)
+- [Core Concepts](#core-concepts)
+- [API](#api)
+  - [createEvarcher](#createevarcher)
+  - [`Handler<P>`](#handlerp)
+  - [ns](#ns)
+  - [`EvFn`](#evfn)
+  - [Operator](#operator)
+    - [register](#register)
+    - [once](#once)
+    - [unregister](#unregister)
+    - [enable](#enable)
+    - [disable](#disable)
+    - [emit](#emit)
+- [FAQ](#faq)
+
 
 ## Installation
 
@@ -28,6 +48,7 @@ ev('greet').emit('World') // Output: Hello, World!
 
 Just create and export an instance, then import to use it!
 
+<!-- omit from toc -->
 ### Create Evarcher Instance
 
 file `event.ts`
@@ -53,6 +74,7 @@ export const { ns, ev } = createEvarcher<MyEvents>({
 })
 ```
 
+<!-- omit from toc -->
 ### Import to Use
 
 file `main.ts`
@@ -98,6 +120,7 @@ openEv.emit()
 
 ## Core Concepts
 
+<!-- omit from toc -->
 ### Namespace
 
 Namespaces help organize events in multi-layer structured projects by creating isolated event scopes. This prevents naming conflicts and improves code organization.
@@ -116,6 +139,7 @@ uiNs('login').register(handleUILogin) // No conflict!
 - Use `ev` for simple cases (uses the default namespace)
 - Use `ns` when you need event isolation or logical grouping
 
+<!-- omit from toc -->
 ### Handler States
 
 Handlers can be in two states:
@@ -182,7 +206,7 @@ Return the event manager [`ev`](#evfn) under a `namespace`.
 
 - `namespace`: `string` - Which namespace to manage.
 
-### EvFn
+### `EvFn`
 
 <!-- dprint-ignore -->
 ```ts
@@ -350,6 +374,7 @@ ev('process').register((data) => {
 })
 ```
 
+<!-- omit from toc -->
 ## License
 
 [MIT](./LICENSE)
