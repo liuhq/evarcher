@@ -136,12 +136,33 @@ Create an evarcher instance to start event management.
 
 `EvarcherOption`
 
+- `defaultNamespace`: `string` - Default namespace to use for `ev`. Default `"DEFAULT_NAMESPACE"`
 - `defaultEnabled`: `boolean` - If `true`, evarcher enables handlers when registering. Default `false`
 
 `EvarcherReturn`
 
+- `DEFAULT_NAMESPACE`: `readonly string` - The default namespace name used by `ev`.
 - [`ns`](#ns): the namespace manager.
-- [`ev`](#evfn): the event manager in the default namespace.
+- [`ev`](#evfn): the event manager in the default namespace. Equal to `ns(DEFAULT_NAMESPACE)`.
+
+**Example with custom default namespace:**
+
+```ts
+const { ns, ev, DEFAULT_NAMESPACE } = createEvarcher<MyEvents>({
+    defaultNamespace: 'app',
+    defaultEnabled: true,
+})
+
+console.log(DEFAULT_NAMESPACE) // Output: 'app'
+
+// ev uses 'app' namespace
+ev('open').register(() => console.log('opened'))
+
+// Equivalent to:
+ns('app')('open').register(() => console.log('opened'))
+// or
+ns(DEFAULT_NAMESPACE)('open').register(() => console.log('opened'))
+```
 
 ### `Handler<P>`
 
@@ -157,7 +178,7 @@ A function that handles event data of type `P`.
 (namespace: string) => EvFn<E>
 ```
 
-return the event manager [`ev`](#ev) under a `namespace`.
+Return the event manager [`ev`](#evfn) under a `namespace`.
 
 - `namespace`: `string` - Which namespace to manage.
 
@@ -168,7 +189,7 @@ return the event manager [`ev`](#ev) under a `namespace`.
 EvFn<E> = <K extends keyof E>(event: K) => Operator<E, K>
 ```
 
-the event manager.
+The event manager.
 
 - `event`: Which event to manage.
 
@@ -222,6 +243,16 @@ saveReg.enable()
 ```
 
 Register a handler that runs only once, then automatically unregisters itself. `EvarcherOption.defaultEnabled` controls whether the handler is enabled by default. You can also immediately enable/disable via `RegisterReturn`.
+
+**Example:**
+
+```ts
+// Handler runs once then auto-removes
+ev('init').once(() => console.log('Initialized!'))
+
+ev('init').emit() // Output: Initialized!
+ev('init').emit() // No output (already removed)
+```
 
 #### unregister
 
@@ -293,7 +324,7 @@ ev('run').emit() // call all enabled handlers of the `run` event
 ev('report:pos').emit({ x: 1, y: 2 }) // pass data to all enabled handlers
 ```
 
-> **Note:** Handlers are executed synchronously. Async handlers will start execution but won't be awaited by emit().
+> **Note:** Handlers are executed synchronously. Async handlers will start execution but won't be awaited by `emit()`.
 
 ## FAQ
 

@@ -1,28 +1,32 @@
-import { DEFAULT_NAMESPACE } from '../constants'
+import { DEFAULT_ENABLED, DEFAULT_NAMESPACE, DEFAULT_TRACE } from '../constants'
 
 export type InternalEvOption = {
-    /** WIP */
-    id: number
-    /** WIP */
-    tag: boolean
-    /** WIP */
+    /**
+     * Default namespace to use for `ev`
+     * @default "DEFAULT_NAMESPACE"
+     */
     defaultNamespace: string
-    /** default enabled, or not: false */
+    /**
+     * Whether the event handlers is enabled by default
+     * @default false
+     */
     defaultEnabled: boolean
+    /**
+     * Enable debug tracing logs
+     * @default false
+     */
     trace: boolean
 }
 
-export type EvarcherOption = Partial<Pick<InternalEvOption, 'defaultEnabled'>>
+export type EvarcherOption = Partial<Omit<InternalEvOption, 'trace'>>
 
 export const merge_option = (
     option: EvarcherOption | undefined,
 ): InternalEvOption => {
     const default_option: InternalEvOption = {
-        id: 0,
-        tag: false,
         defaultNamespace: DEFAULT_NAMESPACE,
-        defaultEnabled: false,
-        trace: false,
+        defaultEnabled: DEFAULT_ENABLED,
+        trace: DEFAULT_TRACE,
     }
     return Object.assign(default_option, option ?? {})
 }

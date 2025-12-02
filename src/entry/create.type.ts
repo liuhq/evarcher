@@ -31,4 +31,9 @@ export type EvFn<E> = <K extends keyof E>(event: K) => Operator<E, K>
 export type EvarcherReturn<E> = {
     ns: (namespace: string) => EvFn<E>
     ev: EvFn<E>
+    /**
+     * @constant
+     * @default "DEFAULT_NAMESPACE"
+     */
+    readonly DEFAULT_NAMESPACE: string
 }
