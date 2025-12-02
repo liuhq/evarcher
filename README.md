@@ -10,9 +10,23 @@ A **type-safe**, **zero-dependency** event manager.
 npm install evarcher
 ```
 
-**Requirements:** Node.js >= 16 or modern browsers with ESM support
+**Requirements:** Node.js >= 16 or modern browsers with ESM support.
+
+## Simple Example
+
+```ts
+import { createEvarcher } from 'evarcher'
+
+type MyEvents = { greet: string }
+const { ev } = createEvarcher<MyEvents>({ defaultEnabled: true })
+
+ev('greet').register((name) => console.log(`Hello, ${name}!`))
+ev('greet').emit('World') // Output: Hello, World!
+```
 
 ## Quick Start
+
+Just create and export an instance, then import to use it!
 
 ### Create Evarcher Instance
 
@@ -32,8 +46,8 @@ export type MyEvents = {
     'report:active': boolean
 }
 
-// Export all controls
-export const { ns } = createEvarcher<MyEvents>({
+// Export ns & ev
+export const { ns, ev } = createEvarcher<MyEvents>({
     // Enable handlers when registering
     defaultEnabled: true,
 })
@@ -45,7 +59,7 @@ file `main.ts`
 
 ```ts
 import { Handler } from 'evarcher'
-import { ns } from './event'
+import { ev, ns } from './event'
 import type { MyEvents } from './event'
 
 const myns = ns('myns')
@@ -74,7 +88,40 @@ myns('open').emit()
 
 // Emit an event with data
 myns('send:message').emit('Success!')
+
+// the ev usage same as ns, but the events will be
+// managed by the default namespace.
+const openEv = ev('open')
+openEv.register(() => console.log('opened'))
+openEv.emit()
 ```
+
+## Core Concepts
+
+### Namespace
+
+Namespaces help organize events in multi-layer structured projects by creating isolated event scopes. This prevents naming conflicts and improves code organization.
+
+```ts
+// Different modules can use the same event names
+const authNs = ns('auth')
+const uiNs = ns('ui')
+
+authNs('login').register(handleAuthLogin)
+uiNs('login').register(handleUILogin) // No conflict!
+```
+
+**When to use:**
+
+- Use `ev` for simple cases (uses the default namespace)
+- Use `ns` when you need event isolation or logical grouping
+
+### Handler States
+
+Handlers can be in two states:
+
+- Enabled: Will be called when the event is emitted
+- Disabled: Registered but won't be called (useful for temporary muting)
 
 ## API
 
@@ -93,34 +140,37 @@ Create an evarcher instance to start event management.
 
 `EvarcherReturn`
 
-- [`ns`](#ns)
-- [`ev`](#ev)
+- [`ns`](#ns): the namespace manager.
+- [`ev`](#evfn): the event manager in the default namespace.
 
-`Handler<P>`: the handler type
+### `Handler<P>`
 
-```ts
-(...payload: P extends void | undefined ? [payload?: undefined] : [payload: P]) => void
-```
+A function that handles event data of type `P`.
+
+- For events with data: `(payload: P) => void`
+- For events without data: `() => void` or `(payload?: undefined) => void`
 
 ### ns
 
 <!-- dprint-ignore -->
 ```ts
 (namespace: string) => EvFn<E>
-````
+```
 
-return the event accessor [`ev`](#ev) under this `namespace`
+return the event manager [`ev`](#ev) under a `namespace`.
 
-- `namespace`: `string` - Which namespace you want to access
+- `namespace`: `string` - Which namespace to manage.
 
-### ev
+### EvFn
 
 <!-- dprint-ignore -->
 ```ts
 EvFn<E> = <K extends keyof E>(event: K) => Operator<E, K>
 ```
 
-- `event`: Which event you want to access
+the event manager.
+
+- `event`: Which event to manage.
 
 [`Operator`](#operator)
 
@@ -140,14 +190,29 @@ EvFn<E> = <K extends keyof E>(event: K) => Operator<E, K>
 <!-- dprint-ignore -->
 ```ts
 (handler: Handler<E[K]>) => RegisterReturn
-````
+```
 
-Register a handler to an event. `EvarcherOption.defaultEnabled` controls default to enable or disable.
+Register a handler to an event. `EvarcherOption.defaultEnabled` controls whether the handler is enabled by default.
+
+Returns a `RegisterReturn` object for immediate state control:
 
 `RegisterReturn`
 
 - `enable`: `() => void`: Enable the handler immediately
 - `disable`: `() => void`: Disable the handler immediately
+
+**Example:**
+
+```ts
+// Register and immediately disable
+const saveReg = ev('save').register(handleSave)
+saveReg.disable()
+
+// ...
+
+// Later: enable it
+saveReg.enable()
+```
 
 #### once
 
@@ -156,7 +221,7 @@ Register a handler to an event. `EvarcherOption.defaultEnabled` controls default
 (handler: Handler<E[K]>) => RegisterReturn
 ```
 
-Register a handler which only run once to an event, and then automatically unregisters. `EvarcherOption.defaultEnabled` controls default to enable or disable. Also can immediately enable/disable via `RegisterReturn`
+Register a handler that runs only once, then automatically unregisters itself. `EvarcherOption.defaultEnabled` controls whether the handler is enabled by default. You can also immediately enable/disable via `RegisterReturn`.
 
 #### unregister
 
@@ -165,7 +230,7 @@ Register a handler which only run once to an event, and then automatically unreg
 (handler?: Handler<E[K]>) => void
 ```
 
-Unregister a handler in the event. Match the same handler by function reference, so you must store the handler in a variable.
+Unregister and remove a handler in the event. Match the same handler by function reference, so you must store the handler in a variable.
 
 ```ts
 const handler = (p) => { ... }
@@ -174,7 +239,7 @@ ev('clear').register(handler)
 ev('clear').unregister(handler)
 ```
 
-the `handler` parameter is optional. It means to remove all handlers of the event when pass `event` without `handler`.
+the `handler` parameter is optional. It means to remove all handlers of the event.
 
 ```ts
 ev('clear').unregister() // remove all handlers of the `clear` event
@@ -187,7 +252,7 @@ ev('clear').unregister() // remove all handlers of the `clear` event
 (handler?: Handler<E[K]>) => void
 ```
 
-Enable a handler in the event. Same as `unregister` that it must be passing the handler variable.
+Enable a handler in the event. Same as `unregister`, you must pass the handler variable.
 
 ```ts
 const handler = (p) => { ... }
@@ -208,7 +273,7 @@ ev('turn:on').enable() // enable all handlers of the `turn:on` event
 (handler?: Handler<E[K]>) => void
 ```
 
-Same as [`enable`](#enable), but disable a/all handler(s) in the event.
+Same as [`enable`](#enable), but disables one or all handlers in the event.
 
 #### emit
 
@@ -220,7 +285,7 @@ Same as [`enable`](#enable), but disable a/all handler(s) in the event.
 ) => void
 ```
 
-Emit an event (with an optional data). It will call all enabled handlers of this event.
+Emit an event with optional data. This calls all enabled handlers synchronously in registration order.
 
 ```ts
 ev('run').emit() // call all enabled handlers of the `run` event
@@ -228,23 +293,31 @@ ev('run').emit() // call all enabled handlers of the `run` event
 ev('report:pos').emit({ x: 1, y: 2 }) // pass data to all enabled handlers
 ```
 
-## Roadmap
-
-- [ ] Async APIs.
-- [ ] Get event and handlers status.
-- [x] Use namespace to manage handlers.
-- [ ] Use priority to control the order of handlers.
-- [ ] Refactor data struct `HandlerUnit` that evarcher can compare handlers without the variable reference.
+> **Note:** Handlers are executed synchronously. Async handlers will start execution but won't be awaited by emit().
 
 ## FAQ
 
-Q: What happens if I emit an event with no handlers?
+**Q: What happens if I emit an event with no handlers?**
 
 A: Nothing. It's safe and won't throw errors.
 
-Q: Can handlers be async?
+**Q: Can handlers be async?**
 
 A: Yes, but `emit()` won't await them. Use Promises manually if needed.
+
+**Q: How do I handle errors in handlers?**
+
+A: Wrap your handler logic in try-catch blocks, as evarcher doesn't catch errors.
+
+```ts
+ev('process').register((data) => {
+    try {
+        processData(data)
+    } catch (error) {
+        console.error('Handler error:', error)
+    }
+})
+```
 
 ## License
 
