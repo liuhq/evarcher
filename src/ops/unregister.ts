@@ -2,26 +2,29 @@ import type { Context, EventHandlerMap, NamespaceMap } from '../data/context'
 import type { Handler, HandlerUnit } from '../data/unit'
 
 export const unregister_ = <E, K extends keyof E>(
-    { trace, ns_map, ..._ }: Context<E>,
+    { trace: { warn, error }, ns_map, ..._ }: Context<E>,
     namespace: string,
     ev_map: EventHandlerMap<E> | undefined,
     event: K,
     units: HandlerUnit<E, K>[] | undefined,
     handler: Handler<E[K]> | undefined,
 ): NamespaceMap<E> => {
+    const op = 'unregister'
+    const event_str = String(event)
     const new_ns_map = ns_map.clone()
 
     if (!ev_map) {
-        trace('ERROR', `(unregister)namespace#${namespace}: not found`)
+        error({ layer: 'namespace', op, message: `${namespace} not found` })
         return new_ns_map
     }
 
     if (!units) {
-        trace('ERROR', `(unregister)event#${String(event)}: not found`)
+        error({ layer: 'event', op, message: `${event_str} not found` })
         return new_ns_map
     }
 
     if (!handler) {
+        warn({ layer: 'event', op, message: `${event_str} all unregister` })
         ev_map.set(event, [])
         new_ns_map.set(namespace, ev_map)
         return new_ns_map

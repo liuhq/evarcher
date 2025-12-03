@@ -4,23 +4,25 @@ import { ExtendMap } from '../data/ex_map'
 import type { Handler, HandlerUnit } from '../data/unit'
 
 export const register_ = <E, K extends keyof E>(
-    { trace, ns_map, opt, global_counter }: Context<E>,
+    { trace: { info }, ns_map, opt, global_counter }: Context<E>,
     namespace: string,
     ev_map: EventHandlerMap<E> | undefined,
     event: K,
     units: HandlerUnit<E, K>[] | undefined,
     handler: Handler<E[K]>,
 ): NamespaceMap<E> => {
+    const op = 'register'
+    const event_str = String(event)
     const new_ns_map = ns_map.clone()
     const unit: HandlerUnit<E, K> = {
         handler,
-        token: `${namespace}:${String(event)}:${global_counter.get()}`,
+        token: `${namespace}:${event_str}:${global_counter.get()}`,
         enabled: opt.defaultEnabled,
         priority: DEFAULT_PRIORITY,
         once: false,
     }
 
-    trace('INFO', `(register)event#${String(event)}`)
+    info({ layer: 'event', op, message: `${event_str}` })
 
     const _ev_map = ev_map ?? new ExtendMap()
     const new_units = units ?? []
