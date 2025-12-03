@@ -2,10 +2,16 @@
   "name": "evarcher",
   "version": "0.2.0",
   "description": "A type-safe, zero-dependency event manager.",
+  "keywords": ["event manager", "type-safe"],
   "author": {
     "name": "Horace Liu",
     "email": "im.liuhq@gmail.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/liuhq/evarcher"
+  },
+  "license": "MIT",
   "type": "module",
   "devDependencies": {
     "@types/bun": "latest",
