@@ -1,12 +1,12 @@
 import type { HandlerUnit } from '../data/unit'
 
 export type UpdaterProcessor<
-    P = Partial<HandlerUnit<unknown, keyof unknown>>,
-> = (unit: P) => P
+    P = HandlerUnit<unknown, keyof unknown>,
+> = (unit: P) => Partial<P>
 
 export const units_updater_ = <
     E,
-    P extends Partial<HandlerUnit<unknown, never>> = HandlerUnit<E, keyof E>,
+    P extends HandlerUnit<unknown, never> = HandlerUnit<E, keyof E>,
 >(
     units: P[],
 ) => {
