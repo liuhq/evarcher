@@ -18,7 +18,7 @@ export type InternalEvOption = {
     trace: boolean
 }
 
-export type EvarcherOption = Partial<Omit<InternalEvOption, 'trace'>>
+export type EvarcherOption = Partial<InternalEvOption>
 
 export const merge_option = (
     option: EvarcherOption | undefined,

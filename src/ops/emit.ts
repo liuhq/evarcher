@@ -3,7 +3,7 @@ import type { HandlerUnit } from '../data/unit'
 import type { Unregister } from '../entry/create.type'
 
 export const emit_ = <E, K extends keyof E>(
-    { trace, ..._ }: Context<E>,
+    { trace: { info, error } }: Context<E>,
     actions: { unregister: Unregister<E, K> },
     namespace: string,
     ev_map: EventHandlerMap<E> | undefined,
@@ -12,13 +12,16 @@ export const emit_ = <E, K extends keyof E>(
     payload: E[K] extends void | undefined ? [payload?: undefined]
         : [payload: E[K]],
 ) => {
+    const op = 'emit'
+    const event_str = String(event)
+
     if (!ev_map) {
-        trace('ERROR', `(emit)namespace#${namespace}: not found`)
+        error({ layer: 'namespace', op, message: `${namespace} not found` })
         return
     }
 
     if (!units) {
-        trace('ERROR', `(emit)event#${String(event)}: not found`)
+        error({ layer: 'event', op, message: `${event_str} not found` })
         return
     }
 
@@ -28,6 +31,12 @@ export const emit_ = <E, K extends keyof E>(
             handler: unit.handler,
             once: unit.once,
         }))
+
+    info({
+        layer: 'event',
+        op,
+        message: `${event_str} runs ${enabled_units.length} handlers`,
+    })
 
     for (const h of enabled_units) {
         h.handler(...payload)
