@@ -3,6 +3,7 @@ import type { Handler } from '../data/unit'
 export type FnVoid = (...any: any[]) => void
 
 export type RegisterReturn = {
+    id: string
     enable: FnVoid
     disable: FnVoid
 }

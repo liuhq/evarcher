@@ -11,7 +11,6 @@ export const enable_ = <E, K extends keyof E>(
     handler: Handler<E[K]> | undefined,
 ): NamespaceMap<E> => {
     const op = 'enable'
-    const event_str = String(event)
     const new_ns_map = ns_map.clone()
 
     if (!ev_map) {
@@ -20,7 +19,7 @@ export const enable_ = <E, K extends keyof E>(
     }
 
     if (!units) {
-        error({ layer: 'event', op, message: `${event_str} not found` })
+        error({ layer: 'event', op, message: `${event as string} not found` })
         return new_ns_map
     }
 
@@ -28,7 +27,7 @@ export const enable_ = <E, K extends keyof E>(
     const processor: UpdaterProcessor = () => ({ enabled: true })
 
     if (!handler) {
-        warn({ layer: 'event', op, message: `${event_str} all enable` })
+        warn({ layer: 'event', op, message: `${event as string} all enable` })
         const updated = units_updater.at('*').by(processor)
         ev_map.set(event, updated)
         new_ns_map.set(namespace, ev_map)

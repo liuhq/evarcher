@@ -1,3 +1,4 @@
+import { DEFAULT_PRIORITY } from '../constants'
 import type {
     Disable,
     Emit,
@@ -15,6 +16,7 @@ import { register_ } from '../ops/register'
 import { unregister_ } from '../ops/unregister'
 import type { Context } from './context'
 import type { GetEvMap } from './types'
+import { unit_ } from './unit'
 
 export const ev_ = <E, K extends keyof E>(
     ctx: Context<E>,
@@ -25,6 +27,9 @@ export const ev_ = <E, K extends keyof E>(
     const ev_map = get_ev_map()
     const units = ev_map?.get(event)
 
+    const enabled = ctx.opt.defaultEnabled
+    const priority = DEFAULT_PRIORITY
+
     const enable: Enable<E, K> = (handler) => {
         ctx.ns_map = enable_(ctx, namespace, ev_map, event, units, handler)
     }
@@ -34,18 +39,46 @@ export const ev_ = <E, K extends keyof E>(
     }
 
     const register: Register<E, K> = (handler) => {
-        ctx.ns_map = register_(ctx, namespace, ev_map, event, units, handler)
+        const once = false
+        const id_number = ctx.global_counter.get()
+        const id = `${namespace}:${event as string}:${id_number}`
+        const reg_unit_ = unit_<E, K>({ enabled, priority, once })
+        ctx.ns_map = register_(
+            ctx,
+            namespace,
+            ev_map,
+            event,
+            units,
+            reg_unit_(id, handler),
+        )
 
         return {
+            get id() {
+                return id
+            },
             enable: () => enable(handler),
             disable: () => disable(handler),
         }
     }
 
     const once: Once<E, K> = (handler) => {
-        ctx.ns_map = once_(ctx, namespace, ev_map, event, units, handler)
+        const once = true
+        const id_number = ctx.global_counter.get()
+        const id = `${namespace}:${event as string}:${id_number}`
+        const once_unit_ = unit_<E, K>({ enabled, priority, once })
+        ctx.ns_map = once_(
+            ctx,
+            namespace,
+            ev_map,
+            event,
+            units,
+            once_unit_(id, handler),
+        )
 
         return {
+            get id() {
+                return id
+            },
             enable: () => enable(handler),
             disable: () => disable(handler),
         }

@@ -10,7 +10,6 @@ export const unregister_ = <E, K extends keyof E>(
     handler: Handler<E[K]> | undefined,
 ): NamespaceMap<E> => {
     const op = 'unregister'
-    const event_str = String(event)
     const new_ns_map = ns_map.clone()
 
     if (!ev_map) {
@@ -19,12 +18,16 @@ export const unregister_ = <E, K extends keyof E>(
     }
 
     if (!units) {
-        error({ layer: 'event', op, message: `${event_str} not found` })
+        error({ layer: 'event', op, message: `${event as string} not found` })
         return new_ns_map
     }
 
     if (!handler) {
-        warn({ layer: 'event', op, message: `${event_str} all unregister` })
+        warn({
+            layer: 'event',
+            op,
+            message: `${event as string} all unregister`,
+        })
         ev_map.set(event, [])
         new_ns_map.set(namespace, ev_map)
         return new_ns_map
