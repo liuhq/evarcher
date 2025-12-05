@@ -16,7 +16,7 @@ export const register_ = <E, K extends keyof E>(
     const new_ns_map = ns_map.clone()
     const unit: HandlerUnit<E, K> = {
         handler,
-        token: `${namespace}:${event_str}:${global_counter.get()}`,
+        id: `${namespace}:${event_str}:${global_counter.get()}`,
         enabled: opt.defaultEnabled,
         priority: DEFAULT_PRIORITY,
         once: false,

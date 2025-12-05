@@ -8,7 +8,7 @@ export type Handler<P> = (
 
 export interface HandlerUnit<E, K extends keyof E> {
     handler: Handler<E[K]>
-    token: string
+    id: string
     enabled: boolean
     priority: number
     once: boolean
@@ -20,12 +20,12 @@ export const create_unit = <E, K extends keyof E>(
         enabled: i_enabled,
         priority: i_priority,
         once: i_once,
-        token: i_token,
+        id: i_id,
     }: Partial<
         Omit<HandlerUnit<E, K>, 'handler'>
     >,
 ) => {
-    const token = i_token ?? `$:${ctx.global_counter.get()}`
+    const id = i_id ?? `$:${ctx.global_counter.get()}`
     const enabled = i_enabled ?? ctx.opt.defaultEnabled
     const priority = i_priority ?? DEFAULT_PRIORITY
     const once = i_once ?? DEFAULT_ONCE
@@ -35,7 +35,7 @@ export const create_unit = <E, K extends keyof E>(
     ): HandlerUnit<E, K> => {
         return {
             handler,
-            token,
+            id: id,
             enabled,
             priority,
             once,
