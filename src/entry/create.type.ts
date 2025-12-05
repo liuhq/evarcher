@@ -11,7 +11,10 @@ export type RegisterReturn = {
 export type Operator<E, K extends keyof E> = {
     register: (handler: Handler<E[K]>) => RegisterReturn
     once: (handler: Handler<E[K]>) => RegisterReturn
-    unregister: (handler?: Handler<E[K]>) => void
+    unregister: {
+        (handler?: Handler<E[K]>): void
+        (id?: string): void
+    }
     enable: (handler?: Handler<E[K]>) => void
     disable: (handler?: Handler<E[K]>) => void
     emit: (
