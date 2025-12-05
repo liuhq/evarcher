@@ -1,6 +1,3 @@
-import { DEFAULT_ONCE, DEFAULT_PRIORITY } from '../constants'
-import type { Context } from './context'
-
 export type Handler<P> = (
     ...payload: P extends void | undefined ? [payload?: undefined]
         : [payload: P]
@@ -14,28 +11,16 @@ export interface HandlerUnit<E, K extends keyof E> {
     once: boolean
 }
 
-export const create_unit = <E, K extends keyof E>(
-    ctx: Context<E>,
-    {
-        enabled: i_enabled,
-        priority: i_priority,
-        once: i_once,
-        id: i_id,
-    }: Partial<
-        Omit<HandlerUnit<E, K>, 'handler'>
-    >,
+export const unit_ = <E, K extends keyof E>(
+    { enabled, priority, once }: Omit<HandlerUnit<E, K>, 'handler' | 'id'>,
 ) => {
-    const id = i_id ?? `$:${ctx.global_counter.get()}`
-    const enabled = i_enabled ?? ctx.opt.defaultEnabled
-    const priority = i_priority ?? DEFAULT_PRIORITY
-    const once = i_once ?? DEFAULT_ONCE
-
     return (
+        id: string,
         handler: Handler<E[K]>,
     ): HandlerUnit<E, K> => {
         return {
             handler,
-            id: id,
+            id,
             enabled,
             priority,
             once,

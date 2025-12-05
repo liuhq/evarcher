@@ -13,7 +13,6 @@ export const emit_ = <E, K extends keyof E>(
         : [payload: E[K]],
 ) => {
     const op = 'emit'
-    const event_str = String(event)
 
     if (!ev_map) {
         error({ layer: 'namespace', op, message: `${namespace} not found` })
@@ -21,7 +20,7 @@ export const emit_ = <E, K extends keyof E>(
     }
 
     if (!units) {
-        error({ layer: 'event', op, message: `${event_str} not found` })
+        error({ layer: 'event', op, message: `${event as string} not found` })
         return
     }
 
@@ -35,7 +34,7 @@ export const emit_ = <E, K extends keyof E>(
     info({
         layer: 'event',
         op,
-        message: `${event_str} runs ${enabled_units.length} handlers`,
+        message: `${event as string} runs ${enabled_units.length} handlers`,
     })
 
     for (const h of enabled_units) {
