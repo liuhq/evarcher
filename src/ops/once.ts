@@ -13,7 +13,7 @@ export const once_ = <E, K extends keyof E>(
     const op = 'once'
     const new_ns_map = ns_map.clone()
 
-    info({ layer: 'event', op, message: `${event as string}` })
+    info({ layer: 'event', op, message: `${event as string} <- ${unit.id}` })
 
     const _ev_map = ev_map ?? new ExtendMap()
     const new_units = units ?? []

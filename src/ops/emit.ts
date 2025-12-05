@@ -26,15 +26,17 @@ export const emit_ = <E, K extends keyof E>(
 
     const enabled_units = units
         .filter((unit) => unit.enabled)
-        .map((unit) => ({
-            handler: unit.handler,
-            once: unit.once,
-        }))
+
+    const list_run_unit = enabled_units.map((u) => u.id).reduce(
+        (acc, id) => acc.concat('\n', '\t', id),
+        '',
+    )
 
     info({
         layer: 'event',
         op,
-        message: `${event as string} runs ${enabled_units.length} handlers`,
+        message:
+            `${event as string} <-run[${enabled_units.length}]-${list_run_unit}`,
     })
 
     for (const h of enabled_units) {

@@ -3,7 +3,7 @@ import type { Handler, HandlerUnit } from '../data/unit'
 import { units_updater_, type UpdaterProcessor } from '../utils/units_updater'
 
 export const enable_ = <E, K extends keyof E>(
-    { trace: { warn, error }, ns_map }: Context<E>,
+    { trace: { info, warn, error }, ns_map }: Context<E>,
     namespace: string,
     ev_map: EventHandlerMap<E> | undefined,
     event: K,
@@ -24,10 +24,21 @@ export const enable_ = <E, K extends keyof E>(
     }
 
     const units_updater = units_updater_(units)
-    const processor: UpdaterProcessor = () => ({ enabled: true })
+    const processor: UpdaterProcessor = (u) => {
+        info({
+            layer: 'event',
+            op,
+            message: `${event as string} <-on- ${u.id}`,
+        })
+        return { enabled: true }
+    }
 
     if (!handler) {
-        warn({ layer: 'event', op, message: `${event as string} all enable` })
+        warn({
+            layer: 'event',
+            op,
+            message: `${event as string} <-on- ALL`,
+        })
         const updated = units_updater.at('*').by(processor)
         ev_map.set(event, updated)
         new_ns_map.set(namespace, ev_map)

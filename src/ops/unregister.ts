@@ -2,7 +2,7 @@ import type { Context, EventHandlerMap, NamespaceMap } from '../data/context'
 import type { Handler, HandlerUnit } from '../data/unit'
 
 export const unregister_ = <E, K extends keyof E>(
-    { trace: { warn, error }, ns_map, ..._ }: Context<E>,
+    { trace: { info, warn, error }, ns_map, ..._ }: Context<E>,
     namespace: string,
     ev_map: EventHandlerMap<E> | undefined,
     event: K,
@@ -26,14 +26,24 @@ export const unregister_ = <E, K extends keyof E>(
         warn({
             layer: 'event',
             op,
-            message: `${event as string} all unregister`,
+            message: `${event as string} -|> ALL`,
         })
         ev_map.set(event, [])
         new_ns_map.set(namespace, ev_map)
         return new_ns_map
     }
 
-    const updated = units.filter((unit) => unit.handler !== handler)
+    const updated = units.filter((unit) => {
+        const retain = unit.handler !== handler
+        if (!retain) {
+            info({
+                layer: 'event',
+                op,
+                message: `${event as string} -> ${unit.id}`,
+            })
+        }
+        return retain
+    })
     ev_map.set(event, updated)
     new_ns_map.set(namespace, ev_map)
     return new_ns_map
