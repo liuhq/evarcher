@@ -84,8 +84,15 @@ export const ev_ = <E, K extends keyof E>(
         }
     }
 
-    const unregister: Unregister<E, K> = (handler) => {
-        ctx.ns_map = unregister_(ctx, namespace, ev_map, event, units, handler)
+    const unregister: Unregister<E, K> = (handler_or_id) => {
+        ctx.ns_map = unregister_(
+            ctx,
+            namespace,
+            ev_map,
+            event,
+            units,
+            handler_or_id,
+        )
     }
 
     const emit: Emit<E, K> = (...payload) => {
