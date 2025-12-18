@@ -18,10 +18,8 @@ export const createEvarcher = <E>(
     const ctx = createContext<E>(default_item, opt)
 
     const ns: EvarcherReturn<E>['ns'] = (namespace) => ns_(ctx, namespace)
-    const ev: EvarcherReturn<E>['ev'] = (event) => {
-        const get_ev_map = () => ctx.ns_map.get(default_namespace)
-        return ev_(ctx, default_namespace, get_ev_map, event)
-    }
+    const ev: EvarcherReturn<E>['ev'] = (event) =>
+        ev_(ctx, default_namespace, event)
 
     return {
         ns,

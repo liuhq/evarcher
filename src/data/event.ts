@@ -15,41 +15,24 @@ import { once_ } from '../ops/once'
 import { register_ } from '../ops/register'
 import { unregister_ } from '../ops/unregister'
 import type { Context } from './context'
-import type { GetEvMap } from './types'
 import { unit_ } from './unit'
 
 export const ev_ = <E, K extends keyof E>(
     ctx: Context<E>,
     namespace: string,
-    get_ev_map: GetEvMap<E>,
     event: K,
 ): Operator<E, K> => {
-    const ev_map = get_ev_map()
-    const units = ev_map?.get(event)
+    const get_ev_map = () => ctx.ns_map.get(namespace)
 
     const enabled = ctx.opt.defaultEnabled
     const priority = DEFAULT_PRIORITY
 
     const enable: Enable<E, K> = (handler_or_id) => {
-        ctx.ns_map = enable_(
-            ctx,
-            namespace,
-            ev_map,
-            event,
-            units,
-            handler_or_id,
-        )
+        ctx.ns_map = enable_(ctx, namespace, event, get_ev_map, handler_or_id)
     }
 
     const disable: Disable<E, K> = (handler_or_id) => {
-        ctx.ns_map = disable_(
-            ctx,
-            namespace,
-            ev_map,
-            event,
-            units,
-            handler_or_id,
-        )
+        ctx.ns_map = disable_(ctx, namespace, event, get_ev_map, handler_or_id)
     }
 
     const register: Register<E, K> = (handler) => {
@@ -60,9 +43,8 @@ export const ev_ = <E, K extends keyof E>(
         ctx.ns_map = register_(
             ctx,
             namespace,
-            ev_map,
             event,
-            units,
+            get_ev_map,
             reg_unit_(id, handler),
         )
 
@@ -83,9 +65,8 @@ export const ev_ = <E, K extends keyof E>(
         ctx.ns_map = once_(
             ctx,
             namespace,
-            ev_map,
             event,
-            units,
+            get_ev_map,
             once_unit_(id, handler),
         )
 
@@ -102,15 +83,14 @@ export const ev_ = <E, K extends keyof E>(
         ctx.ns_map = unregister_(
             ctx,
             namespace,
-            ev_map,
             event,
-            units,
+            get_ev_map,
             handler_or_id,
         )
     }
 
     const emit: Emit<E, K> = (...payload) => {
-        emit_(ctx, { unregister }, namespace, ev_map, event, units, payload)
+        emit_(ctx, { unregister }, namespace, event, get_ev_map, payload)
     }
 
     return {

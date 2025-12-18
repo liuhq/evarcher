@@ -1,23 +1,25 @@
-import type { Context, EventHandlerMap } from '../data/context'
-import type { HandlerUnit } from '../data/unit'
+import type { Context } from '../data/context'
+import type { GetEvMap } from '../data/types'
 import type { Unregister } from '../entry/create.type'
 
 export const emit_ = <E, K extends keyof E>(
     { trace: { info, error } }: Context<E>,
     actions: { unregister: Unregister<E, K> },
     namespace: string,
-    ev_map: EventHandlerMap<E> | undefined,
     event: K,
-    units: HandlerUnit<E, K>[] | undefined,
+    get_ev_map: GetEvMap<E>,
     payload: E[K] extends void | undefined ? [payload?: undefined]
         : [payload: E[K]],
 ) => {
     const op = 'emit'
+    const ev_map = get_ev_map()
 
     if (!ev_map) {
         error({ layer: 'namespace', op, message: `${namespace} not found` })
         return
     }
+
+    const units = ev_map?.get(event)
 
     if (!units) {
         error({ layer: 'event', op, message: `${event as string} not found` })
