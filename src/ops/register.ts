@@ -1,17 +1,19 @@
-import type { Context, EventHandlerMap, NamespaceMap } from '../data/context'
+import type { Context, NamespaceMap } from '../data/context'
 import { ExtendMap } from '../data/ex_map'
+import type { GetEvMap } from '../data/types'
 import type { HandlerUnit } from '../data/unit'
 
 export const register_ = <E, K extends keyof E>(
     { trace: { info }, ns_map }: Context<E>,
     namespace: string,
-    ev_map: EventHandlerMap<E> | undefined,
     event: K,
-    units: HandlerUnit<E, K>[] | undefined,
+    get_ev_map: GetEvMap<E>,
     unit: HandlerUnit<E, K>,
 ): NamespaceMap<E> => {
     const op = 'register'
     const new_ns_map = ns_map.clone()
+    const ev_map = get_ev_map()
+    const units = ev_map?.get(event)
 
     info({ layer: 'event', op, message: `${event as string} <- ${unit.id}` })
 

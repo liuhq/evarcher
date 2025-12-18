@@ -6,8 +6,7 @@ export const ns_ = <E>(
     ctx: Context<E>,
     namespace: string,
 ): EvFn<E> => {
-    const get_ev_map = () => ctx.ns_map.get(namespace)
     return <K extends keyof E>(event: K) => {
-        return ev_(ctx, namespace, get_ev_map, event)
+        return ev_(ctx, namespace, event)
     }
 }

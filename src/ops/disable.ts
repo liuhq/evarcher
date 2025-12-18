@@ -1,4 +1,5 @@
-import type { Context, EventHandlerMap, NamespaceMap } from '../data/context'
+import type { Context, NamespaceMap } from '../data/context'
+import type { GetEvMap } from '../data/types'
 import type { Handler, HandlerUnit } from '../data/unit'
 import { units_updater_, type UpdaterProcessor } from '../utils/units_updater'
 
@@ -33,18 +34,20 @@ const condition_ = <E, K extends keyof E>(
 export const disable_ = <E, K extends keyof E>(
     { trace: { info, warn, error }, ns_map }: Context<E>,
     namespace: string,
-    ev_map: EventHandlerMap<E> | undefined,
     event: K,
-    units: HandlerUnit<E, K>[] | undefined,
+    get_ev_map: GetEvMap<E>,
     handler_or_id: Handler<E[K]> | string | undefined,
 ): NamespaceMap<E> => {
     const op = 'disable'
     const new_ns_map = ns_map.clone()
+    const ev_map = get_ev_map()
 
     if (!ev_map) {
         error({ layer: 'namespace', op, message: `${namespace} not found` })
         return new_ns_map
     }
+
+    const units = ev_map?.get(event)
 
     if (!units) {
         error({ layer: 'event', op, message: `${event as string} not found` })
