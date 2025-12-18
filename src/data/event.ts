@@ -41,8 +41,15 @@ export const ev_ = <E, K extends keyof E>(
         )
     }
 
-    const disable: Disable<E, K> = (handler) => {
-        ctx.ns_map = disable_(ctx, namespace, ev_map, event, units, handler)
+    const disable: Disable<E, K> = (handler_or_id) => {
+        ctx.ns_map = disable_(
+            ctx,
+            namespace,
+            ev_map,
+            event,
+            units,
+            handler_or_id,
+        )
     }
 
     const register: Register<E, K> = (handler) => {
