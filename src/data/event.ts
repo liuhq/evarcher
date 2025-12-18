@@ -30,8 +30,15 @@ export const ev_ = <E, K extends keyof E>(
     const enabled = ctx.opt.defaultEnabled
     const priority = DEFAULT_PRIORITY
 
-    const enable: Enable<E, K> = (handler) => {
-        ctx.ns_map = enable_(ctx, namespace, ev_map, event, units, handler)
+    const enable: Enable<E, K> = (handler_or_id) => {
+        ctx.ns_map = enable_(
+            ctx,
+            namespace,
+            ev_map,
+            event,
+            units,
+            handler_or_id,
+        )
     }
 
     const disable: Disable<E, K> = (handler) => {

@@ -15,7 +15,10 @@ export type Operator<E, K extends keyof E> = {
         (handler?: Handler<E[K]>): void
         (id?: string): void
     }
-    enable: (handler?: Handler<E[K]>) => void
+    enable: {
+        (handler?: Handler<E[K]>): void
+        (id?: string): void
+    }
     disable: (handler?: Handler<E[K]>) => void
     emit: (
         ...payload: E[K] extends void | undefined ? [payload?: undefined]
