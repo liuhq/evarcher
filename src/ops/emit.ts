@@ -42,7 +42,9 @@ export const emit_ = <E, K extends keyof E>(
     })
 
     for (const h of enabled_units) {
-        h.handler(...payload)
+        // 避免同步运行因为异步 handler 导致中断
+        // TODO: catch(handleError)
+        Promise.resolve().then(() => h.handler(...payload))
         if (h.once) actions.unregister(h.handler)
     }
 }
