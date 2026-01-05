@@ -5,7 +5,9 @@ import type {
     Enable,
     Once,
     Operator,
+    Parallel,
     Register,
+    Serial,
     Unregister,
 } from '../entry/create.type'
 import { disable_ } from '../ops/disable'
@@ -90,7 +92,28 @@ export const ev_ = <E, K extends keyof E>(
     }
 
     const emit: Emit<E, K> = (...payload) => {
-        emit_(ctx, { unregister }, namespace, event, get_ev_map, payload)
+        const emit_inner = emit_(ctx, namespace, event, get_ev_map)
+        if (!emit_inner) return
+        const sync = emit_inner.sync(payload)
+        sync.unregister_once(unregister)
+    }
+
+    const parallel: Parallel<E, K> = {
+        emit: async (...payload) => {
+            const emit_async = emit_(ctx, namespace, event, get_ev_map)
+            if (!emit_async) return
+            const resolved = await emit_async.parallel(payload)
+            resolved.unregister_once(unregister)
+        },
+    }
+
+    const serial: Serial<E, K> = {
+        emit: async (...payload) => {
+            const emit_async = emit_(ctx, namespace, event, get_ev_map)
+            if (!emit_async) return
+            const resolved = await emit_async.serial(payload)
+            resolved.unregister_once(unregister)
+        },
     }
 
     return {
@@ -100,5 +123,7 @@ export const ev_ = <E, K extends keyof E>(
         once,
         unregister,
         emit,
+        parallel,
+        serial,
     }
 }
