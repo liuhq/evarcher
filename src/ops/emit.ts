@@ -1,15 +1,32 @@
 import type { Context } from '../data/context'
 import type { GetEvMap } from '../data/types'
+import type { HandlerUnit } from '../data/unit'
 import type { Unregister } from '../entry/create.type'
+import { emit_parallel_, emit_serial_ } from './emit_async'
+import { unregister_once_ } from './unregister'
+
+const emit_sync_ = <E, K extends keyof E>(
+    units: HandlerUnit<E, any>[],
+    payload: E[K] extends void | undefined ? [payload?: undefined]
+        : [payload: E[K]],
+) => {
+    for (const h of units) {
+        // 避免同步运行因为异步 handler 导致中断
+        // TODO: catch(handleError)
+        Promise.resolve().then(() => h.handler(...payload))
+    }
+
+    return {
+        unregister_once: (unregister: Unregister<E, K>) =>
+            unregister_once_(unregister, units),
+    }
+}
 
 export const emit_ = <E, K extends keyof E>(
     { trace: { info, error } }: Context<E>,
-    actions: { unregister: Unregister<E, K> },
     namespace: string,
     event: K,
     get_ev_map: GetEvMap<E>,
-    payload: E[K] extends void | undefined ? [payload?: undefined]
-        : [payload: E[K]],
 ) => {
     const op = 'emit'
     const ev_map = get_ev_map()
@@ -41,10 +58,18 @@ export const emit_ = <E, K extends keyof E>(
             `${event as string} <-run[${enabled_units.length}]-${list_run_unit}`,
     })
 
-    for (const h of enabled_units) {
-        // 避免同步运行因为异步 handler 导致中断
-        // TODO: catch(handleError)
-        Promise.resolve().then(() => h.handler(...payload))
-        if (h.once) actions.unregister(h.handler)
+    return {
+        sync: (
+            payload: E[K] extends void | undefined ? [payload?: undefined]
+                : [payload: E[K]],
+        ) => emit_sync_(enabled_units, payload),
+        parallel: (
+            payload: E[K] extends void | undefined ? [payload?: undefined]
+                : [payload: E[K]],
+        ) => emit_parallel_(enabled_units, payload),
+        serial: (
+            payload: E[K] extends void | undefined ? [payload?: undefined]
+                : [payload: E[K]],
+        ) => emit_serial_(enabled_units, payload),
     }
 }

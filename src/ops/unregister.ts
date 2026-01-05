@@ -1,6 +1,7 @@
 import type { Context, NamespaceMap } from '../data/context'
 import type { GetEvMap } from '../data/types'
 import type { Handler, HandlerUnit } from '../data/unit'
+import type { Unregister } from '../entry/create.type'
 
 type ConditionReturn<E, K extends keyof E> = (
     units: HandlerUnit<E, K>[],
@@ -74,4 +75,14 @@ export const unregister_ = <E, K extends keyof E>(
     ev_map.set(event, updated)
     new_ns_map.set(namespace, ev_map)
     return new_ns_map
+}
+
+export const unregister_once_ = <E, K extends keyof E>(
+    unregister: Unregister<E, K>,
+    units: HandlerUnit<E, any>[],
+) => {
+    const once_units = units.filter((u) => u.once)
+    for (const unit of once_units) {
+        unregister(unit.id)
+    }
 }

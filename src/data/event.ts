@@ -12,7 +12,6 @@ import type {
 } from '../entry/create.type'
 import { disable_ } from '../ops/disable'
 import { emit_ } from '../ops/emit'
-import { emit_async_ } from '../ops/emit_async'
 import { enable_ } from '../ops/enable'
 import { once_ } from '../ops/once'
 import { register_ } from '../ops/register'
@@ -93,12 +92,15 @@ export const ev_ = <E, K extends keyof E>(
     }
 
     const emit: Emit<E, K> = (...payload) => {
-        emit_(ctx, { unregister }, namespace, event, get_ev_map, payload)
+        const emit_inner = emit_(ctx, namespace, event, get_ev_map)
+        if (!emit_inner) return
+        const sync = emit_inner.sync(payload)
+        sync.unregister_once(unregister)
     }
 
     const parallel: Parallel<E, K> = {
         emit: async (...payload) => {
-            const emit_async = emit_async_(ctx, namespace, event, get_ev_map)
+            const emit_async = emit_(ctx, namespace, event, get_ev_map)
             if (!emit_async) return
             const resolved = await emit_async.parallel(payload)
             resolved.unregister_once(unregister)
@@ -107,7 +109,7 @@ export const ev_ = <E, K extends keyof E>(
 
     const serial: Serial<E, K> = {
         emit: async (...payload) => {
-            const emit_async = emit_async_(ctx, namespace, event, get_ev_map)
+            const emit_async = emit_(ctx, namespace, event, get_ev_map)
             if (!emit_async) return
             const resolved = await emit_async.serial(payload)
             resolved.unregister_once(unregister)
