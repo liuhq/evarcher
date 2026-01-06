@@ -1,23 +1,25 @@
-export type Handler<P> = (
-    ...payload: P extends void | undefined ? [payload?: undefined]
-        : [payload: P]
-) => void
+import type { EventCollection, EventConfig } from './types'
 
-export interface HandlerUnit<E, K extends keyof E> {
-    handler: Handler<E[K]>
+export type Handler<E extends EventConfig> = (
+    ...payload: E extends void | undefined ? [payload?: undefined]
+        : [payload: E['payload']]
+) => E['result']
+
+export interface HandlerUnit<C extends EventCollection, K extends keyof C> {
+    handler: Handler<C[K]>
     id: string
     enabled: boolean
     priority: number
     once: boolean
 }
 
-export const unit_ = <E, K extends keyof E>(
-    { enabled, priority, once }: Omit<HandlerUnit<E, K>, 'handler' | 'id'>,
+export const unit_ = <C extends EventCollection, K extends keyof C>(
+    { enabled, priority, once }: Omit<HandlerUnit<C, K>, 'handler' | 'id'>,
 ) => {
     return (
         id: string,
-        handler: Handler<E[K]>,
-    ): HandlerUnit<E, K> => {
+        handler: Handler<C[K]>,
+    ): HandlerUnit<C, K> => {
         return {
             handler,
             id,

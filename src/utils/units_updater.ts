@@ -1,19 +1,21 @@
+import type { EventCollection } from '../data/types'
 import type { HandlerUnit } from '../data/unit'
 
 export type UpdaterProcessor<
-    P = HandlerUnit<unknown, keyof unknown>,
+    C extends EventCollection,
+    P = HandlerUnit<C, keyof C>,
 > = (unit: P) => Partial<P>
 
 export const units_updater_ = <
-    E,
-    P extends HandlerUnit<unknown, never> = HandlerUnit<E, keyof E>,
+    C extends EventCollection,
+    P extends HandlerUnit<C, keyof C> = HandlerUnit<C, keyof C>,
 >(
     units: P[],
 ) => {
     return {
         at: <PK extends keyof P>(path: [PK, P[PK]] | '*') => {
             return {
-                by: (processor: UpdaterProcessor): P[] =>
+                by: (processor: UpdaterProcessor<C>): P[] =>
                     units.map((u) => {
                         if (path === '*' || path.length < 2) {
                             return { ...u, ...processor(u) }

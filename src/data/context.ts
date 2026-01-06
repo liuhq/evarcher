@@ -4,16 +4,17 @@ import { type Counter, createCounter } from '../utils/counter'
 import type { Trace } from '../utils/trace'
 import { createTrace } from '../utils/trace'
 import { ExtendMap } from './ex_map'
+import type { EventCollection } from './types'
 import type { HandlerUnit } from './unit'
 
-export type EventKey<E> = keyof E
-export type EventHandlerMap<E> = ExtendMap<
-    EventKey<E>,
-    HandlerUnit<E, any>[]
+export type EventKey<C extends EventCollection> = keyof C
+export type EventHandlerMap<C extends EventCollection> = ExtendMap<
+    EventKey<C>,
+    HandlerUnit<C, any>[]
 >
-export type NamespaceMap<E> = ExtendMap<
+export type NamespaceMap<C extends EventCollection> = ExtendMap<
     string,
-    EventHandlerMap<E>
+    EventHandlerMap<C>
 >
 
 type TraceSlot = {
@@ -22,18 +23,18 @@ type TraceSlot = {
     message: string
 }
 
-export type Context<E> = {
+export type Context<C extends EventCollection> = {
     opt: InternalEvOption
     global_counter: Counter
     trace: ReturnType<Trace<TraceSlot>>
 
-    ns_map: NamespaceMap<E>
+    ns_map: NamespaceMap<C>
 }
 
-export const createContext = <E>(
-    default_item: Iterable<readonly [string, EventHandlerMap<E>]>,
+export const createContext = <C extends EventCollection>(
+    default_item: Iterable<readonly [string, EventHandlerMap<C>]>,
     opt: InternalEvOption,
-): Context<E> => {
+): Context<C> => {
     const global_counter = createCounter(0)
     const trace = createTrace<TraceSlot>(opt.trace)(
         ({ meta: { datetime, level }, slot }) => {
@@ -45,7 +46,7 @@ export const createContext = <E>(
         },
     )
 
-    const ns_map = new ExtendMap<string, EventHandlerMap<E>>(
+    const ns_map = new ExtendMap<string, EventHandlerMap<C>>(
         default_item,
     )
 
