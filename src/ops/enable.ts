@@ -1,18 +1,18 @@
 import type { Context, NamespaceMap } from '../data/context'
-import type { GetEvMap } from '../data/types'
+import type { EventCollection, GetEvMap } from '../data/types'
 import type { Handler, HandlerUnit } from '../data/unit'
 import { units_updater_, type UpdaterProcessor } from '../utils/units_updater'
 
-type ConditionReturn<E, K extends keyof E> = (
-    handler_or_id: Handler<E[K]> | string | undefined,
-) => HandlerUnit<E, K>[]
+type ConditionReturn<C extends EventCollection, K extends keyof C> = (
+    handler_or_id: Handler<C[K]> | string | undefined,
+) => HandlerUnit<C, K>[]
 
-const condition_ = <E, K extends keyof E>(
-    units: HandlerUnit<E, K>[],
+const condition_ = <C extends EventCollection, K extends keyof C>(
+    units: HandlerUnit<C, K>[],
     trace: (id: string) => void,
-): ConditionReturn<E, K> => {
-    const updater = units_updater_(units)
-    const processor: UpdaterProcessor = (u) => {
+): ConditionReturn<C, K> => {
+    const updater = units_updater_<C>(units)
+    const processor: UpdaterProcessor<C> = (u) => {
         trace(u.id)
         return { enabled: true }
     }
@@ -31,13 +31,13 @@ const condition_ = <E, K extends keyof E>(
     }
 }
 
-export const enable_ = <E, K extends keyof E>(
-    { trace: { info, warn, error }, ns_map }: Context<E>,
+export const enable_ = <C extends EventCollection, K extends keyof C>(
+    { trace: { info, warn, error }, ns_map }: Context<C>,
     namespace: string,
     event: K,
-    get_ev_map: GetEvMap<E>,
-    handler_or_id: Handler<E[K]> | string | undefined,
-): NamespaceMap<E> => {
+    get_ev_map: GetEvMap<C>,
+    handler_or_id: Handler<C[K]> | string | undefined,
+): NamespaceMap<C> => {
     const op = 'enable'
     const new_ns_map = ns_map.clone()
     const ev_map = get_ev_map()

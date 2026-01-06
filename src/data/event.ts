@@ -1,5 +1,6 @@
 import { DEFAULT_PRIORITY } from '../constants'
 import type {
+    Collect,
     Disable,
     Emit,
     Enable,
@@ -10,6 +11,7 @@ import type {
     Serial,
     Unregister,
 } from '../entry/create.type'
+import { collect_ } from '../ops/collect'
 import { disable_ } from '../ops/disable'
 import { emit_ } from '../ops/emit'
 import { enable_ } from '../ops/enable'
@@ -17,31 +19,32 @@ import { once_ } from '../ops/once'
 import { register_ } from '../ops/register'
 import { unregister_ } from '../ops/unregister'
 import type { Context } from './context'
+import type { EventCollection } from './types'
 import { unit_ } from './unit'
 
-export const ev_ = <E, K extends keyof E>(
-    ctx: Context<E>,
+export const ev_ = <C extends EventCollection, K extends keyof C>(
+    ctx: Context<C>,
     namespace: string,
     event: K,
-): Operator<E, K> => {
+): Operator<C, K> => {
     const get_ev_map = () => ctx.ns_map.get(namespace)
 
     const enabled = ctx.opt.defaultEnabled
     const priority = DEFAULT_PRIORITY
 
-    const enable: Enable<E, K> = (handler_or_id) => {
+    const enable: Enable<C, K> = (handler_or_id) => {
         ctx.ns_map = enable_(ctx, namespace, event, get_ev_map, handler_or_id)
     }
 
-    const disable: Disable<E, K> = (handler_or_id) => {
+    const disable: Disable<C, K> = (handler_or_id) => {
         ctx.ns_map = disable_(ctx, namespace, event, get_ev_map, handler_or_id)
     }
 
-    const register: Register<E, K> = (handler) => {
+    const register: Register<C, K> = (handler) => {
         const once = false
         const id_number = ctx.global_counter.get()
         const id = `${namespace}:${event as string}:${id_number}`
-        const reg_unit_ = unit_<E, K>({ enabled, priority, once })
+        const reg_unit_ = unit_<C, K>({ enabled, priority, once })
         ctx.ns_map = register_(
             ctx,
             namespace,
@@ -59,11 +62,11 @@ export const ev_ = <E, K extends keyof E>(
         }
     }
 
-    const once: Once<E, K> = (handler) => {
+    const once: Once<C, K> = (handler) => {
         const once = true
         const id_number = ctx.global_counter.get()
         const id = `${namespace}:${event as string}:${id_number}`
-        const once_unit_ = unit_<E, K>({ enabled, priority, once })
+        const once_unit_ = unit_<C, K>({ enabled, priority, once })
         ctx.ns_map = once_(
             ctx,
             namespace,
@@ -81,7 +84,7 @@ export const ev_ = <E, K extends keyof E>(
         }
     }
 
-    const unregister: Unregister<E, K> = (handler_or_id) => {
+    const unregister: Unregister<C, K> = (handler_or_id) => {
         ctx.ns_map = unregister_(
             ctx,
             namespace,
@@ -91,28 +94,50 @@ export const ev_ = <E, K extends keyof E>(
         )
     }
 
-    const emit: Emit<E, K> = (...payload) => {
+    const emit: Emit<C, K> = (...payload) => {
         const emit_inner = emit_(ctx, namespace, event, get_ev_map)
         if (!emit_inner) return
         const sync = emit_inner.sync(payload)
         sync.unregister_once(unregister)
     }
 
-    const parallel: Parallel<E, K> = {
+    const collect: Collect<C, K> = (...payload) => {
+        const collect_inner = collect_(ctx, namespace, event, get_ev_map)
+        if (!collect_inner) return []
+        const sync = collect_inner.sync(payload)
+        sync.unregister_once(unregister)
+        return sync.result_container
+    }
+
+    const parallel: Parallel<C, K> = {
         emit: async (...payload) => {
             const emit_async = emit_(ctx, namespace, event, get_ev_map)
             if (!emit_async) return
             const resolved = await emit_async.parallel(payload)
             resolved.unregister_once(unregister)
         },
+        collect: async (...payload) => {
+            const collect_async = collect_(ctx, namespace, event, get_ev_map)
+            if (!collect_async) return new Promise((resolve) => resolve([]))
+            const resolved = await collect_async.parallel(payload)
+            resolved.unregister_once(unregister)
+            return resolved.result_container
+        },
     }
 
-    const serial: Serial<E, K> = {
+    const serial: Serial<C, K> = {
         emit: async (...payload) => {
             const emit_async = emit_(ctx, namespace, event, get_ev_map)
             if (!emit_async) return
             const resolved = await emit_async.serial(payload)
             resolved.unregister_once(unregister)
+        },
+        collect: async (...payload) => {
+            const collect_async = collect_(ctx, namespace, event, get_ev_map)
+            if (!collect_async) return new Promise((resolve) => resolve([]))
+            const resolved = await collect_async.serial(payload)
+            resolved.unregister_once(unregister)
+            return resolved.result_container
         },
     }
 
@@ -123,6 +148,7 @@ export const ev_ = <E, K extends keyof E>(
         once,
         unregister,
         emit,
+        collect,
         parallel,
         serial,
     }

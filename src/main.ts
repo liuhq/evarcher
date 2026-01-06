@@ -1,3 +1,4 @@
+export type { DefineEvents } from './data/types'
 export type { Handler } from './data/unit'
 export { createEvarcher } from './entry/create'
 export type { EvarcherReturn, RegisterReturn } from './entry/create.type'

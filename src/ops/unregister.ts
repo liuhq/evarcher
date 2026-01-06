@@ -1,16 +1,16 @@
 import type { Context, NamespaceMap } from '../data/context'
-import type { GetEvMap } from '../data/types'
+import type { EventCollection, GetEvMap } from '../data/types'
 import type { Handler, HandlerUnit } from '../data/unit'
 import type { Unregister } from '../entry/create.type'
 
-type ConditionReturn<E, K extends keyof E> = (
-    units: HandlerUnit<E, K>[],
+type ConditionReturn<C extends EventCollection, K extends keyof C> = (
+    units: HandlerUnit<C, K>[],
     trace: (id: string) => void,
-) => HandlerUnit<E, K>[]
+) => HandlerUnit<C, K>[]
 
-const condition_ = <E, K extends keyof E>(
-    handler_or_id: Handler<E[K]> | string,
-): ConditionReturn<E, K> => {
+const condition_ = <C extends EventCollection, K extends keyof C>(
+    handler_or_id: Handler<C[K]> | string,
+): ConditionReturn<C, K> => {
     switch (typeof handler_or_id) {
         case 'function':
             return (units, trace) =>
@@ -31,13 +31,13 @@ const condition_ = <E, K extends keyof E>(
     }
 }
 
-export const unregister_ = <E, K extends keyof E>(
-    { trace: { info, warn, error }, ns_map, ..._ }: Context<E>,
+export const unregister_ = <C extends EventCollection, K extends keyof C>(
+    { trace: { info, warn, error }, ns_map, ..._ }: Context<C>,
     namespace: string,
     event: K,
-    get_ev_map: GetEvMap<E>,
-    handler_or_id: Handler<E[K]> | string | undefined,
-): NamespaceMap<E> => {
+    get_ev_map: GetEvMap<C>,
+    handler_or_id: Handler<C[K]> | string | undefined,
+): NamespaceMap<C> => {
     const op = 'unregister'
     const new_ns_map = ns_map.clone()
     const ev_map = get_ev_map()
@@ -77,9 +77,9 @@ export const unregister_ = <E, K extends keyof E>(
     return new_ns_map
 }
 
-export const unregister_once_ = <E, K extends keyof E>(
-    unregister: Unregister<E, K>,
-    units: HandlerUnit<E, any>[],
+export const unregister_once_ = <C extends EventCollection, K extends keyof C>(
+    unregister: Unregister<C, K>,
+    units: HandlerUnit<C, any>[],
 ) => {
     const once_units = units.filter((u) => u.once)
     for (const unit of once_units) {

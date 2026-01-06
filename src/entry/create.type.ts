@@ -1,14 +1,15 @@
+import type { EventCollection } from '../data/types'
 import type { Handler } from '../data/unit'
 
 export type FnVoid = (...any: any[]) => void
 
-export type Enable<E, K extends keyof E> = {
-    (handler?: Handler<E[K]>): void
+export type Enable<C extends EventCollection, K extends keyof C> = {
+    (handler?: Handler<C[K]>): void
     (id?: string): void
 }
 
-export type Disable<E, K extends keyof E> = {
-    (handler?: Handler<E[K]>): void
+export type Disable<C extends EventCollection, K extends keyof C> = {
+    (handler?: Handler<C[K]>): void
     (id?: string): void
 }
 
@@ -18,53 +19,68 @@ export type RegisterReturn = {
     disable: FnVoid
 }
 
-export type Register<E, K extends keyof E> = (
-    handler: Handler<E[K]>,
+export type Register<C extends EventCollection, K extends keyof C> = (
+    handler: Handler<C[K]>,
 ) => RegisterReturn
 
-export type Once<E, K extends keyof E> = (
-    handler: Handler<E[K]>,
+export type Once<C extends EventCollection, K extends keyof C> = (
+    handler: Handler<C[K]>,
 ) => RegisterReturn
 
-export type Unregister<E, K extends keyof E> = {
-    (handler?: Handler<E[K]>): void
+export type Unregister<C extends EventCollection, K extends keyof C> = {
+    (handler?: Handler<C[K]>): void
     (id?: string): void
 }
 
-export type Emit<E, K extends keyof E> = (
-    ...payload: E[K] extends void | undefined ? [payload?: undefined]
-        : [payload: E[K]]
+export type Emit<C extends EventCollection, K extends keyof C> = (
+    ...payload: C[K]['payload'] extends void | undefined ? [payload?: undefined]
+        : [payload: C[K]['payload']]
 ) => void
 
-export type EmitAsync<E, K extends keyof E> = (
-    ...payload: E[K] extends void | undefined ? [payload?: undefined]
-        : [payload: E[K]]
+export type EmitAsync<C extends EventCollection, K extends keyof C> = (
+    ...payload: C[K]['payload'] extends void | undefined ? [payload?: undefined]
+        : [payload: C[K]['payload']]
 ) => Promise<void>
 
-export type Parallel<E, K extends keyof E> = {
-    emit: EmitAsync<E, K>
+export type Collect<C extends EventCollection, K extends keyof C> = (
+    ...payload: C[K]['payload'] extends void | undefined ? [payload?: undefined]
+        : [payload: C[K]['payload']]
+) => Array<C[K]['result']>
+
+export type CollectAsync<C extends EventCollection, K extends keyof C> = (
+    ...payload: C[K]['payload'] extends void | undefined ? [payload?: undefined]
+        : [payload: C[K]['payload']]
+) => Promise<Array<C[K]['result']>>
+
+export type Parallel<C extends EventCollection, K extends keyof C> = {
+    emit: EmitAsync<C, K>
+    collect: CollectAsync<C, K>
 }
 
-export type Serial<E, K extends keyof E> = {
-    emit: EmitAsync<E, K>
+export type Serial<C extends EventCollection, K extends keyof C> = {
+    emit: EmitAsync<C, K>
+    collect: CollectAsync<C, K>
 }
 
-export type Operator<E, K extends keyof E> = {
-    enable: Enable<E, K>
-    disable: Disable<E, K>
-    register: Register<E, K>
-    once: Once<E, K>
-    unregister: Unregister<E, K>
-    emit: Emit<E, K>
-    parallel: Parallel<E, K>
-    serial: Serial<E, K>
+export type Operator<C extends EventCollection, K extends keyof C> = {
+    enable: Enable<C, K>
+    disable: Disable<C, K>
+    register: Register<C, K>
+    once: Once<C, K>
+    unregister: Unregister<C, K>
+    emit: Emit<C, K>
+    collect: Collect<C, K>
+    parallel: Parallel<C, K>
+    serial: Serial<C, K>
 }
 
-export type EvFn<E> = <K extends keyof E>(event: K) => Operator<E, K>
+export type EvFn<C extends EventCollection> = <K extends keyof C>(
+    event: K,
+) => Operator<C, K>
 
-export type EvarcherReturn<E> = {
-    ns: (namespace: string) => EvFn<E>
-    ev: EvFn<E>
+export type EvarcherReturn<C extends EventCollection> = {
+    ns: (namespace: string) => EvFn<C>
+    ev: EvFn<C>
     /**
      * @constant
      * @default "DEFAULT_NAMESPACE"
