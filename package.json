@@ -26,6 +26,7 @@
   "types": "dist/main.d.ts",
   "scripts": {
     "lint": "bunx oxlint",
+    "check": "tsc --noEmit",
     "prebuild": "bun run lint",
     "build": "bun build.ts"
   }
