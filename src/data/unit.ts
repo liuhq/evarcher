@@ -3,7 +3,7 @@ import type { EventCollection, EventConfig } from './types'
 export type Handler<E extends EventConfig> = (
     ...payload: E extends void | undefined ? [payload?: undefined]
         : [payload: E['payload']]
-) => E['result']
+) => E['result'] | Promise<E['result']>
 
 export interface HandlerUnit<C extends EventCollection, K extends keyof C> {
     handler: Handler<C[K]>
