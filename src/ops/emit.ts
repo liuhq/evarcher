@@ -2,6 +2,7 @@ import type { Context } from '../data/context'
 import type { EventCollection, GetEvMap } from '../data/types'
 import type { HandlerUnit } from '../data/unit'
 import type { Unregister } from '../entry/create.type'
+import type { UnitErrorFn } from '../entry/error'
 import { emit_parallel_, emit_serial_ } from './emit_async'
 import { unregister_once_ } from './unregister'
 
@@ -9,11 +10,20 @@ const emit_sync_ = <C extends EventCollection, K extends keyof C>(
     units: HandlerUnit<C, any>[],
     payload: C[K]['payload'] extends void | undefined ? [payload?: undefined]
         : [payload: C[K]['payload']],
+    unit_error: UnitErrorFn,
 ) => {
     for (const h of units) {
-        // 避免同步运行因为异步 handler 导致中断
-        // TODO: catch(handleError)
         Promise.resolve().then(() => h.handler(...payload))
+        try {
+            h.handler(...payload)
+        } catch (error) {
+            if (typeof error === 'string') {
+                unit_error(h.id, error)
+            } else {
+                unit_error(h.id, JSON.stringify(error))
+            }
+            continue
+        }
     }
 
     return {
@@ -23,7 +33,7 @@ const emit_sync_ = <C extends EventCollection, K extends keyof C>(
 }
 
 export const emit_ = <C extends EventCollection, K extends keyof C>(
-    { trace: { info, error } }: Context<C>,
+    { trace: { info, error }, handle_error }: Context<C>,
     namespace: string,
     event: K,
     get_ev_map: GetEvMap<C>,
@@ -58,21 +68,23 @@ export const emit_ = <C extends EventCollection, K extends keyof C>(
             `${event as string} <-run[${enabled_units.length}]-${list_run_unit}`,
     })
 
+    const unit_error = handle_error(namespace, event as string)
+
     return {
         sync: (
             payload: C[K]['payload'] extends void | undefined
                 ? [payload?: undefined]
                 : [payload: C[K]['payload']],
-        ) => emit_sync_(enabled_units, payload),
+        ) => emit_sync_(enabled_units, payload, unit_error),
         parallel: (
             payload: C[K]['payload'] extends void | undefined
                 ? [payload?: undefined]
                 : [payload: C[K]['payload']],
-        ) => emit_parallel_(enabled_units, payload),
+        ) => emit_parallel_(enabled_units, payload, unit_error),
         serial: (
             payload: C[K]['payload'] extends void | undefined
                 ? [payload?: undefined]
                 : [payload: C[K]['payload']],
-        ) => emit_serial_(enabled_units, payload),
+        ) => emit_serial_(enabled_units, payload, unit_error),
     }
 }

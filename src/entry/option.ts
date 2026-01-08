@@ -1,4 +1,5 @@
 import { DEFAULT_ENABLED, DEFAULT_NAMESPACE, DEFAULT_TRACE } from '../constants'
+import { DEFAULT_HANDLE_ERROR, type HandleError } from './error'
 
 export type InternalEvOption = {
     /**
@@ -11,6 +12,7 @@ export type InternalEvOption = {
      * @default false
      */
     defaultEnabled: boolean
+    handleError: HandleError
     /**
      * Enable debug tracing logs
      * @default false
@@ -26,6 +28,7 @@ export const merge_option = (
     const default_option: InternalEvOption = {
         defaultNamespace: DEFAULT_NAMESPACE,
         defaultEnabled: DEFAULT_ENABLED,
+        handleError: DEFAULT_HANDLE_ERROR,
         trace: DEFAULT_TRACE,
     }
     return Object.assign(default_option, option ?? {})

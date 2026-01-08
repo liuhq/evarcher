@@ -2,6 +2,7 @@ import type { Context } from '../data/context'
 import type { EventCollection, GetEvMap } from '../data/types'
 import type { HandlerUnit } from '../data/unit'
 import type { Unregister } from '../entry/create.type'
+import type { UnitErrorFn } from '../entry/error'
 import { collect_parallel_, collect_serial_ } from './collect_async'
 import { unregister_once_ } from './unregister'
 
@@ -9,13 +10,28 @@ const collect_sync_ = <C extends EventCollection, K extends keyof C>(
     units: HandlerUnit<C, any>[],
     payload: C[K]['payload'] extends void | undefined ? [payload?: undefined]
         : [payload: C[K]['payload']],
+    unit_error: UnitErrorFn,
 ) => {
     const result_container: C[K]['result'][] = []
 
     for (const h of units) {
-        // TODO: handle asynchronous errors
-        const result = h.handler(...payload)
-        result_container.push(result)
+        try {
+            const result = h.handler(...payload)
+            if (
+                result instanceof Promise
+                && typeof result.catch === 'function'
+            ) {
+                result.catch((reason) => unit_error(h.id, reason))
+            }
+            result_container.push(result)
+        } catch (error) {
+            if (typeof error === 'string') {
+                unit_error(h.id, error)
+            } else {
+                unit_error(h.id, JSON.stringify(error))
+            }
+            continue
+        }
     }
 
     return {
@@ -26,7 +42,7 @@ const collect_sync_ = <C extends EventCollection, K extends keyof C>(
 }
 
 export const collect_ = <C extends EventCollection, K extends keyof C>(
-    { trace: { info, error } }: Context<C>,
+    { trace: { info, error }, handle_error }: Context<C>,
     namespace: string,
     event: K,
     get_ev_map: GetEvMap<C>,
@@ -61,21 +77,23 @@ export const collect_ = <C extends EventCollection, K extends keyof C>(
             `${event as string} <-run[${enabled_units.length}]-${list_run_unit}`,
     })
 
+    const unit_error = handle_error(namespace, event as string)
+
     return {
         sync: (
             payload: C[K]['payload'] extends void | undefined
                 ? [payload?: undefined]
                 : [payload: C[K]['payload']],
-        ) => collect_sync_(enabled_units, payload),
+        ) => collect_sync_(enabled_units, payload, unit_error),
         parallel: (
             payload: C[K]['payload'] extends void | undefined
                 ? [payload?: undefined]
                 : [payload: C[K]['payload']],
-        ) => collect_parallel_(enabled_units, payload),
+        ) => collect_parallel_(enabled_units, payload, unit_error),
         serial: (
             payload: C[K]['payload'] extends void | undefined
                 ? [payload?: undefined]
                 : [payload: C[K]['payload']],
-        ) => collect_serial_(enabled_units, payload),
+        ) => collect_serial_(enabled_units, payload, unit_error),
     }
 }

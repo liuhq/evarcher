@@ -1,4 +1,5 @@
 import type { Operator } from '../entry/create.type'
+import { createError, type EventErrorFn } from '../entry/error'
 import type { InternalEvOption } from '../entry/option'
 import { type Counter, createCounter } from '../utils/counter'
 import type { Trace } from '../utils/trace'
@@ -27,7 +28,7 @@ export type Context<C extends EventCollection> = {
     opt: InternalEvOption
     global_counter: Counter
     trace: ReturnType<Trace<TraceSlot>>
-
+    handle_error: EventErrorFn
     ns_map: NamespaceMap<C>
 }
 
@@ -46,6 +47,8 @@ export const createContext = <C extends EventCollection>(
         },
     )
 
+    const handle_error = createError(opt.handleError)
+
     const ns_map = new ExtendMap<string, EventHandlerMap<C>>(
         default_item,
     )
@@ -54,6 +57,7 @@ export const createContext = <C extends EventCollection>(
         opt,
         global_counter,
         trace,
+        handle_error,
         ns_map,
     }
 }
