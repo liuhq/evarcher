@@ -16,7 +16,6 @@ await build({
     target: false,
     format: 'esm',
     dts: true,
-    minify: true,
     outputOptions: {
         entryFileNames: '[name].js',
     },
