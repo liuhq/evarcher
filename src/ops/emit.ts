@@ -1,10 +1,10 @@
-import type { Context } from '../data/context'
-import type { EventCollection, GetEvMap } from '../data/types'
-import type { HandlerUnit } from '../data/unit'
-import type { Unregister } from '../entry/create.type'
-import type { UnitErrorFn } from '../entry/error'
-import { emit_parallel_, emit_serial_ } from './emit_async'
-import { unregister_once_ } from './unregister'
+import type { Context } from '../data/context.ts'
+import type { EventCollection, GetEvMap } from '../data/types.ts'
+import type { HandlerUnit } from '../data/unit.ts'
+import type { Unregister } from '../entry/create.type.ts'
+import type { UnitErrorFn } from '../entry/error.ts'
+import { emit_parallel_, emit_serial_ } from './emit_async.ts'
+import { unregister_once_ } from './unregister.ts'
 
 const emit_sync_ = <C extends EventCollection, K extends keyof C>(
     units: HandlerUnit<C, any>[],

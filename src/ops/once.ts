@@ -1,7 +1,7 @@
-import type { Context, NamespaceMap } from '../data/context'
-import { ExtendMap } from '../data/ex_map'
-import type { EventCollection, GetEvMap } from '../data/types'
-import type { HandlerUnit } from '../data/unit'
+import type { Context, NamespaceMap } from '../data/context.ts'
+import { ExtendMap } from '../data/ex_map.ts'
+import type { EventCollection, GetEvMap } from '../data/types.ts'
+import type { HandlerUnit } from '../data/unit.ts'
 
 export const once_ = <C extends EventCollection, K extends keyof C>(
     { trace: { info }, ns_map }: Context<C>,

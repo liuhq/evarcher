@@ -1,8 +1,8 @@
-import type { EventCollection } from '../data/types'
-import type { HandlerUnit } from '../data/unit'
-import type { Unregister } from '../entry/create.type'
-import type { UnitErrorFn } from '../entry/error'
-import { unregister_once_ } from './unregister'
+import type { EventCollection } from '../data/types.ts'
+import type { HandlerUnit } from '../data/unit.ts'
+import type { Unregister } from '../entry/create.type.ts'
+import type { UnitErrorFn } from '../entry/error.ts'
+import { unregister_once_ } from './unregister.ts'
 
 export const emit_parallel_ = async <
     C extends EventCollection,

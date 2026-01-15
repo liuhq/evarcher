@@ -1,4 +1,4 @@
-import type { EventHandlerMap } from './context'
+import type { EventHandlerMap } from './context.ts'
 
 export type GetEvMap<C extends EventCollection> = () =>
     | EventHandlerMap<C>

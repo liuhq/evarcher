@@ -1,4 +1,4 @@
-import { DEFAULT_PRIORITY } from '../constants'
+import { DEFAULT_PRIORITY } from '../constants.ts'
 import type {
     Collect,
     Disable,
@@ -10,17 +10,17 @@ import type {
     Register,
     Serial,
     Unregister,
-} from '../entry/create.type'
-import { collect_ } from '../ops/collect'
-import { disable_ } from '../ops/disable'
-import { emit_ } from '../ops/emit'
-import { enable_ } from '../ops/enable'
-import { once_ } from '../ops/once'
-import { register_ } from '../ops/register'
-import { unregister_ } from '../ops/unregister'
-import type { Context } from './context'
-import type { EventCollection } from './types'
-import { unit_ } from './unit'
+} from '../entry/create.type.ts'
+import { collect_ } from '../ops/collect.ts'
+import { disable_ } from '../ops/disable.ts'
+import { emit_ } from '../ops/emit.ts'
+import { enable_ } from '../ops/enable.ts'
+import { once_ } from '../ops/once.ts'
+import { register_ } from '../ops/register.ts'
+import { unregister_ } from '../ops/unregister.ts'
+import type { Context } from './context.ts'
+import type { EventCollection } from './types.ts'
+import { unit_ } from './unit.ts'
 
 export const ev_ = <C extends EventCollection, K extends keyof C>(
     ctx: Context<C>,

@@ -1,7 +1,7 @@
-import type { Context, NamespaceMap } from '../data/context'
-import type { EventCollection, GetEvMap } from '../data/types'
-import type { Handler, HandlerUnit } from '../data/unit'
-import type { Unregister } from '../entry/create.type'
+import type { Context, NamespaceMap } from '../data/context.ts'
+import type { EventCollection, GetEvMap } from '../data/types.ts'
+import type { Handler, HandlerUnit } from '../data/unit.ts'
+import type { Unregister } from '../entry/create.type.ts'
 
 type ConditionReturn<C extends EventCollection, K extends keyof C> = (
     units: HandlerUnit<C, K>[],
