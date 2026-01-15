@@ -13,7 +13,6 @@ const emit_sync_ = <C extends EventCollection, K extends keyof C>(
     unit_error: UnitErrorFn,
 ) => {
     for (const h of units) {
-        Promise.resolve().then(() => h.handler(...payload))
         try {
             h.handler(...payload)
         } catch (error) {

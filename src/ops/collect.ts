@@ -17,12 +17,6 @@ const collect_sync_ = <C extends EventCollection, K extends keyof C>(
     for (const h of units) {
         try {
             const result = h.handler(...payload)
-            if (
-                result instanceof Promise
-                && typeof result.catch === 'function'
-            ) {
-                result.catch((reason) => unit_error(h.id, reason))
-            }
             result_container.push(result)
         } catch (error) {
             if (typeof error === 'string') {
