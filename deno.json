@@ -2,6 +2,11 @@
   "name": "evarcher",
   "version": "0.2.1",
   "license": "MIT",
+  "exports": "./src/main.ts",
+  "publish": {
+    "include": ["src", "LICENSE", "README.md"],
+    "exclude": ["dist", "scripts"]
+  },
   "permissions": {
     "build": {
       "read": true,

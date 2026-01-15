@@ -2,7 +2,9 @@
 import { join } from 'node:path'
 import { sortPackage, writePackageJSON } from 'npm:pkg-types@2.3.0'
 import { build } from 'npm:tsdown@0.20.0-beta.2'
-import _ from 'npm:typescript@5.9.3'
+import type _ from 'npm:typescript@5.9.3'
+
+import denoJson from '../deno.json' with { type: 'json' }
 
 const outDir = 'dist'
 
@@ -26,10 +28,11 @@ console.info(`ℹ Generate ${pkgFile}`)
 await writePackageJSON(
     pkgPath,
     sortPackage({
-        name: 'evarcher',
-        version: '0.2.1',
+        name: denoJson.name,
+        version: denoJson.version,
         description: 'A type-safe, zero-dependency event manager.',
         keywords: ['event manager', 'type-safe'],
+        license: denoJson.license,
         author: {
             name: 'Horace Liu',
             email: 'im.liuhq@gmail.com',
@@ -38,7 +41,6 @@ await writePackageJSON(
             type: 'git',
             url: 'https://github.com/liuhq/evarcher',
         },
-        license: 'MIT',
         type: 'module',
         files: ['main.js', 'main.d.ts'],
         exports: './main.js',
