@@ -38,7 +38,7 @@ await writePackageJSON(
         },
         repository: {
             type: 'git',
-            url: 'https://github.com/liuhq/evarcher',
+            url: 'git+https://github.com/liuhq/evarcher.git',
         },
         type: 'module',
         files: ['main.js', 'main.d.ts'],
