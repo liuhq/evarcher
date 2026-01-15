@@ -1,5 +1,7 @@
+<!-- dprint-ignore-start -->
 <!-- omit from toc -->
 # evarcher
+<!-- dprint-ignore-end -->
 
 A **type-safe**, **zero-dependency** event manager.
 
@@ -22,7 +24,6 @@ A **type-safe**, **zero-dependency** event manager.
     - [disable](#disable)
     - [emit](#emit)
 - [FAQ](#faq)
-
 
 ## Installation
 
@@ -48,8 +49,10 @@ ev('greet').emit('World') // Output: Hello, World!
 
 Just create and export an instance, then import to use it!
 
+<!-- dprint-ignore-start -->
 <!-- omit from toc -->
 ### Create Evarcher Instance
+<!-- dprint-ignore-end -->
 
 file `event.ts`
 
@@ -74,8 +77,10 @@ export const { ns, ev } = createEvarcher<MyEvents>({
 })
 ```
 
+<!-- dprint-ignore-start -->
 <!-- omit from toc -->
 ### Import to Use
+<!-- dprint-ignore-end -->
 
 file `main.ts`
 
@@ -120,8 +125,10 @@ openEv.emit()
 
 ## Core Concepts
 
+<!-- dprint-ignore-start -->
 <!-- omit from toc -->
 ### Namespace
+<!-- dprint-ignore-end -->
 
 Namespaces help organize events in multi-layer structured projects by creating isolated event scopes. This prevents naming conflicts and improves code organization.
 
@@ -139,8 +146,10 @@ uiNs('login').register(handleUILogin) // No conflict!
 - Use `ev` for simple cases (uses the default namespace)
 - Use `ns` when you need event isolation or logical grouping
 
+<!-- dprint-ignore-start -->
 <!-- omit from toc -->
 ### Handler States
+<!-- dprint-ignore-end -->
 
 Handlers can be in two states:
 
@@ -374,7 +383,9 @@ ev('process').register((data) => {
 })
 ```
 
+<!-- dprint-ignore-start -->
 <!-- omit from toc -->
 ## License
 
 [MIT](./LICENSE)
+<!-- dprint-ignore-end -->
