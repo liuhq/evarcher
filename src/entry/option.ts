@@ -17,25 +17,38 @@ export type InternalEvOption = {
      */
     defaultEnabled: boolean
     /**
-     * Custom Error Handler
+     * Custom error handler for event processing errors.
      *
-     * Invoked when an error occurs during event emission or collection.
+     * Invoked when an error occurs during event emission or collection. This allows
+     * you to implement custom error logging, reporting, or recovery logic.
      *
-     * @param {Object} error - Error containing target information and error message
-     * @param {Object} error.target - Target where the error occurred
+     * @param {EvarcherError} error - Error object containing target information and error message
+     * @param {EvErrorTarget} error.target - Target where the error occurred
      * @param {string} error.target.namespace - Namespace identifier
      * @param {string} error.target.event - Event name
-     * @param {string} error.target.unitId - Unique identifier of the HandlerUnit
+     * @param {string} error.target.unitId - Unique identifier of the handler unit
      * @param {string} error.message - Error description message
+     * @returns {void}
      *
      * @example
      * ```ts
-     * // The default `handleError`:
+     * // Default error handler implementation
      * handleError: ({ target, message }) => {
      *     const formatted = `${target.unitId} <-x- ${message}`
      *     console.error(formatted)
      * }
      * ```
+     *
+     * @example
+     * // Custom error handler with structured logging
+     * handleError: ({ target, message }) => {
+     *   logger.error('Event handler failed', {
+     *     namespace: target.namespace,
+     *     event: target.event,
+     *     handlerId: target.unitId,
+     *     error: message
+     *   })
+     * }
      */
     handleError: HandleError
     /**

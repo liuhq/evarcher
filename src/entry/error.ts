@@ -1,6 +1,6 @@
 import type { HandlerUnit } from '../data/unit.ts'
 
-type EvErrorTarget = {
+export type EvErrorTarget = {
     namespace: string
     event: string
     unitId: HandlerUnit<any, any>['id']
