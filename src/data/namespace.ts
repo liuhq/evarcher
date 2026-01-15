@@ -1,7 +1,7 @@
-import type { EvFn } from '../entry/create.type'
-import type { Context } from './context'
-import { ev_ } from './event'
-import type { EventCollection } from './types'
+import type { EvFn } from '../entry/create.type.ts'
+import type { Context } from './context.ts'
+import { ev_ } from './event.ts'
+import type { EventCollection } from './types.ts'
 
 export const ns_ = <C extends EventCollection>(
     ctx: Context<C>,

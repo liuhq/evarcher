@@ -1,5 +1,5 @@
-import type { EventCollection } from '../data/types'
-import type { Handler } from '../data/unit'
+import type { EventCollection } from '../data/types.ts'
+import type { Handler } from '../data/unit.ts'
 
 export type FnVoid = (...any: any[]) => void
 

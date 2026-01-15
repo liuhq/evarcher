@@ -1,4 +1,4 @@
-import type { EventCollection, EventConfig } from './types'
+import type { EventCollection, EventConfig } from './types.ts'
 
 export type Handler<E extends EventConfig> = (
     ...payload: E extends void | undefined ? [payload?: undefined]

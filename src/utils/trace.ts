@@ -1,4 +1,4 @@
-import { type DateTime, datetime } from './datetime'
+import { type DateTime, datetime } from './datetime.ts'
 
 type Accessor<T> = () => T
 

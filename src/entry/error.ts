@@ -1,4 +1,4 @@
-import type { HandlerUnit } from '../data/unit'
+import type { HandlerUnit } from '../data/unit.ts'
 
 type EvErrorTarget = {
     namespace: string

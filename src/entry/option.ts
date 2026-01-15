@@ -1,5 +1,9 @@
-import { DEFAULT_ENABLED, DEFAULT_NAMESPACE, DEFAULT_TRACE } from '../constants'
-import { DEFAULT_HANDLE_ERROR, type HandleError } from './error'
+import {
+    DEFAULT_ENABLED,
+    DEFAULT_NAMESPACE,
+    DEFAULT_TRACE,
+} from '../constants.ts'
+import { DEFAULT_HANDLE_ERROR, type HandleError } from './error.ts'
 
 export type InternalEvOption = {
     /**

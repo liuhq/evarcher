@@ -1,0 +1,31 @@
+{
+  "name": "evarcher",
+  "version": "0.2.1",
+  "license": "MIT",
+  "exports": "./src/main.ts",
+  "publish": {
+    "include": ["src", "LICENSE", "README.md"],
+    "exclude": ["dist", "scripts"]
+  },
+  "permissions": {
+    "build": {
+      "read": true,
+      "write": ["dist"],
+      "run": true,
+      "env": true,
+      "ffi": true
+    }
+  },
+  "tasks": {
+    "fmt:check": "dprint check",
+    "fmt:run": "dprint fmt",
+    "lint": "oxlint",
+    "build": {
+      "command": "deno run -P=build scripts/build.ts",
+      "dependencies": [
+        "lint",
+        "fmt:check"
+      ]
+    }
+  }
+}

@@ -1,12 +1,12 @@
-import { createContext } from '../data/context'
-import { ev_ } from '../data/event'
-import { ExtendMap } from '../data/ex_map'
-import { ns_ } from '../data/namespace'
-import type { EventCollection } from '../data/types'
-import type { HandlerUnit } from '../data/unit'
-import type { EvarcherReturn } from './create.type'
-import { merge_option } from './option'
-import type { EvarcherOption } from './option'
+import { createContext } from '../data/context.ts'
+import { ev_ } from '../data/event.ts'
+import { ExtendMap } from '../data/ex_map.ts'
+import { ns_ } from '../data/namespace.ts'
+import type { EventCollection } from '../data/types.ts'
+import type { HandlerUnit } from '../data/unit.ts'
+import type { EvarcherReturn } from './create.type.ts'
+import { merge_option } from './option.ts'
+import type { EvarcherOption } from './option.ts'
 
 export const createEvarcher = <C extends EventCollection>(
     option?: EvarcherOption,

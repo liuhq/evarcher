@@ -1,12 +1,12 @@
-import type { Operator } from '../entry/create.type'
-import { createError, type EventErrorFn } from '../entry/error'
-import type { InternalEvOption } from '../entry/option'
-import { type Counter, createCounter } from '../utils/counter'
-import type { Trace } from '../utils/trace'
-import { createTrace } from '../utils/trace'
-import { ExtendMap } from './ex_map'
-import type { EventCollection } from './types'
-import type { HandlerUnit } from './unit'
+import type { Operator } from '../entry/create.type.ts'
+import { createError, type EventErrorFn } from '../entry/error.ts'
+import type { InternalEvOption } from '../entry/option.ts'
+import { type Counter, createCounter } from '../utils/counter.ts'
+import type { Trace } from '../utils/trace.ts'
+import { createTrace } from '../utils/trace.ts'
+import { ExtendMap } from './ex_map.ts'
+import type { EventCollection } from './types.ts'
+import type { HandlerUnit } from './unit.ts'
 
 export type EventKey<C extends EventCollection> = keyof C
 export type EventHandlerMap<C extends EventCollection> = ExtendMap<

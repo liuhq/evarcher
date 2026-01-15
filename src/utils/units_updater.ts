@@ -1,5 +1,5 @@
-import type { EventCollection } from '../data/types'
-import type { HandlerUnit } from '../data/unit'
+import type { EventCollection } from '../data/types.ts'
+import type { HandlerUnit } from '../data/unit.ts'
 
 export type UpdaterProcessor<
     C extends EventCollection,
